@@ -3,6 +3,10 @@ import random
 import numpy as np
 import gym
 from gym import spaces
+import sys
+from PIL import Image
+import matplotlib.pyplot as plt
+
 
 from pongGame import *
 
@@ -36,7 +40,7 @@ class PongEnv(gym.Env):
         timestep_info = self.game.step(action_vec[0], action_vec[1])
         reward = (timestep_info['leftPlayerRew'], timestep_info['rightPlayerRew'])
         done = timestep_info['done']
-        self.board_state = self.game.getScreenGrayscale()
+        self.board_state = self.game.getScreenBlackWhite()
         info = self.game.getExtraInfo()
         return self.board_state, reward, done, info
 
@@ -61,6 +65,10 @@ if __name__ == "__main__":
         print("Stepping")
         print("Ball velocity", env.game.Ball.velocityX, env.game.Ball.velocityY)
         obs, rew, done, info = env.step((1, 2))
+        frame = Image.fromarray(obs)
+        plt.imshow(frame, cmap='Greys')
+        plt.pause(0.001)
+        print(info)
         env.render()
         if done:
             obs = env.reset()

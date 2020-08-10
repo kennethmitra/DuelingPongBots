@@ -107,7 +107,7 @@ class Game:
         self.EDGE_OFFSET = 10
         self.TOP_WALL_Y = 10
         self.BOT_WALL_Y = self.CANVAS_HEIGHT - 10
-        self.BG_COLOR = (255,255,255)
+        self.BG_COLOR = (0,0,0)
         self.canvas = pygame.display.set_mode([self.CANVAS_WIDTH, self.CANVAS_HEIGHT])
 
         self.allSprites = pygame.sprite.Group()
@@ -115,14 +115,14 @@ class Game:
         self.ball = pygame.sprite.Group()
 
         # Create both players
-        self.LeftPlayer = Player(color=(255,0,0), width=10, height=50, speed=2, isLeftPaddle=True, EDGE_OFFSET=self.EDGE_OFFSET, CANVAS_WIDTH=self.CANVAS_WIDTH, CANVAS_HEIGHT=self.CANVAS_HEIGHT)
-        self.RightPlayer = Player(color=(0,0,255), width=10, height=50, speed=2, isLeftPaddle=False, EDGE_OFFSET=self.EDGE_OFFSET, CANVAS_WIDTH=self.CANVAS_WIDTH, CANVAS_HEIGHT=self.CANVAS_HEIGHT)
+        self.LeftPlayer = Player(color=(255,80,80), width=10, height=50, speed=2, isLeftPaddle=True, EDGE_OFFSET=self.EDGE_OFFSET, CANVAS_WIDTH=self.CANVAS_WIDTH, CANVAS_HEIGHT=self.CANVAS_HEIGHT)
+        self.RightPlayer = Player(color=(80,80,255), width=10, height=50, speed=2, isLeftPaddle=False, EDGE_OFFSET=self.EDGE_OFFSET, CANVAS_WIDTH=self.CANVAS_WIDTH, CANVAS_HEIGHT=self.CANVAS_HEIGHT)
         self.allSprites.add(self.LeftPlayer)
         self.allSprites.add(self.RightPlayer)
         self.playerSprites.add(self.LeftPlayer)
         self.playerSprites.add(self.RightPlayer)
         # Create ball
-        self.Ball = Ball(color=(0,255,0), width=10, height=10, MAX_INITIAL_VEL=3, CANVAS_WIDTH=CANVAS_WIDTH, CANVAS_HEIGHT=CANVAS_HEIGHT)
+        self.Ball = Ball(color=(255,255,255), width=10, height=10, MAX_INITIAL_VEL=3, CANVAS_WIDTH=CANVAS_WIDTH, CANVAS_HEIGHT=CANVAS_HEIGHT)
         self.allSprites.add(self.Ball)
 
     def reset(self):
@@ -200,8 +200,11 @@ class Game:
         numpy uint8 array
             Returns a numpy array with the shape (width, height, 3).
         """
+        frame = pygame.surfarray.array3d(pygame.display.get_surface()).astype(np.uint8)
+        frame = np.rot90(frame, 1, axes=(0, 1))
+        frame = np.flipud(frame)
 
-        return pygame.surfarray.array3d(pygame.display.get_surface()).astype(np.uint8)
+        return frame
     
     def getScreenGrayscale(self):
         """
@@ -215,6 +218,13 @@ class Game:
         frame = self.getScreenRGB()
         frame = 0.21 * frame[:, :, 0] + 0.72 * frame[:, :, 1] + 0.07 * frame[:, :, 2]
         frame = np.round(frame).astype(np.uint8)
+
+        return frame
+
+    def getScreenBlackWhite(self):
+        frame = self.getScreenRGB()
+        frame = 0.21 * frame[:, :, 0] + 0.72 * frame[:, :, 1] + 0.07 * frame[:, :, 2]
+        frame = frame > 80.0
 
         return frame
 
