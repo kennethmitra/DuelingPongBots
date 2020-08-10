@@ -63,4 +63,5 @@ if __name__ == "__main__":
         obs, rew, done, info = env.step((1, 2))
         env.render()
         if done:
-            break
+            obs = env.reset()
+            done = False

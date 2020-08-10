@@ -139,13 +139,17 @@ class Game:
         self.LeftPlayer.performAction(leftAction)
         self.RightPlayer.performAction(rightAction)
         
-        # Check collisions
-        playersHit = pygame.sprite.spritecollide(self.Ball, self.playerSprites, dokill=False)
-        
         # Handle collisions
-        for player in playersHit: # Should only loop at most once
-            self.Ball.velocityX *= -1 # Flip X velocity
-           # self.Ball.velocityY += player.velocityY
+        if self.Ball.rect.top >= self.LeftPlayer.rect.top and self.Ball.rect.bottom <= self.LeftPlayer.rect.bottom and self.Ball.rect.left <= self.LeftPlayer.rect.right:
+            self.Ball.velocityX *= -1  # Flip X velocity
+            self.Ball.velocityY = (self.LeftPlayer.velocityY + self.Ball.velocityY)//2
+            if self.Ball.velocityY == 0:
+                self.Ball.velocityY = random.randint(0, 1) * 2 - 1  # Get a 1 or -1
+        if self.Ball.rect.top >= self.RightPlayer.rect.top and self.Ball.rect.bottom <= self.RightPlayer.rect.bottom and self.Ball.rect.right >= self.RightPlayer.rect.left:
+            self.Ball.velocityX *= -1  # Flip X velocity
+            self.Ball.velocityY = (self.RightPlayer.velocityY + self.Ball.velocityY) // 2
+            if self.Ball.velocityY == 0:
+                self.Ball.velocityY = random.randint(0, 1) * 2 - 1  # Get a 1 or -1
         
         # Check wall collisions
         if self.Ball.rect.top < self.TOP_WALL_Y or self.Ball.rect.bottom > self.BOT_WALL_Y:
