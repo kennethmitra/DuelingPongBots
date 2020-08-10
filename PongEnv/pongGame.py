@@ -189,9 +189,9 @@ class Game:
             ball_center_y = self.Ball.y + self.Ball.height/2
             paddle_center_y = player.y + player.height/2
 
-            # If ball hits top of paddle, go down (+vel), if ball hits bottom of paddle go up (-vel)
+            # If ball hits top of paddle, add upwards velocity (-vel), if ball hits bottom of paddle add downwards velocity (-vel)
             # ball_vel_y_modifier has abs val <= 1 + small value (assuming ball height << paddle height)
-            ball_vel_y_modifier = (paddle_center_y - ball_center_y) / (float(player.height) / 2.0)
+            ball_vel_y_modifier = (ball_center_y - paddle_center_y) / (float(player.height) / 2.0)
             self.Ball.velocityY = (-1.0 if self.Ball.velocityY < 0 else 1.0) * \
                                   0.5 * math.sqrt(self.Ball.velocityY**2 + self.Ball.velocityX**2) * \
                                   (1 + 0.8*ball_vel_y_modifier) + player.velocityY
