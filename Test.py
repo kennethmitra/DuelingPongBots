@@ -36,4 +36,4 @@ def test(LeftPlayer, RightPlayer, framerate=-1):
 
 
 if __name__ == '__main__':
-    test(HumanPlayer(frameskip=1, isLeftPlayer=True), HardcodedOpponent(isLeftPlayer=False, frameskip=5), framerate=30)
+    test(HumanPlayer(frameskip=1, isLeftPlayer=True), HardcodedOpponent(isLeftPlayer=False, frameskip=5), framerate=60)

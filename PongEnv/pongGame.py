@@ -145,14 +145,14 @@ class Game:
         self.ball = pygame.sprite.Group()
 
         # Create both players
-        self.LeftPlayer = Player(color=(255,80,80), width=10, height=50, speed=1, isLeftPaddle=True, EDGE_OFFSET=self.EDGE_OFFSET, CANVAS_WIDTH=self.CANVAS_WIDTH, CANVAS_HEIGHT=self.CANVAS_HEIGHT)
-        self.RightPlayer = Player(color=(80,80,255), width=10, height=50, speed=1, isLeftPaddle=False, EDGE_OFFSET=self.EDGE_OFFSET, CANVAS_WIDTH=self.CANVAS_WIDTH, CANVAS_HEIGHT=self.CANVAS_HEIGHT)
+        self.LeftPlayer = Player(color=(255,80,80), width=10, height=50, speed=2.5, isLeftPaddle=True, EDGE_OFFSET=self.EDGE_OFFSET, CANVAS_WIDTH=self.CANVAS_WIDTH, CANVAS_HEIGHT=self.CANVAS_HEIGHT)
+        self.RightPlayer = Player(color=(80,80,255), width=10, height=50, speed=2.5, isLeftPaddle=False, EDGE_OFFSET=self.EDGE_OFFSET, CANVAS_WIDTH=self.CANVAS_WIDTH, CANVAS_HEIGHT=self.CANVAS_HEIGHT)
         self.allSprites.add(self.LeftPlayer)
         self.allSprites.add(self.RightPlayer)
         self.playerSprites.add(self.LeftPlayer)
         self.playerSprites.add(self.RightPlayer)
         # Create ball
-        self.Ball = Ball(color=(255,255,255), width=7, height=7, MAX_INITIAL_VEL=1, CANVAS_WIDTH=CANVAS_WIDTH, CANVAS_HEIGHT=CANVAS_HEIGHT)
+        self.Ball = Ball(color=(255,255,255), width=7, height=7, MAX_INITIAL_VEL=5, CANVAS_WIDTH=CANVAS_WIDTH, CANVAS_HEIGHT=CANVAS_HEIGHT)
         self.allSprites.add(self.Ball)
 
     def reset(self):
@@ -176,8 +176,6 @@ class Game:
             if len(playersHit) > 1:
                 print("Error: Ball hit both players at same time")
                 assert(False)
-            if self.Ball.velocityX > 10:
-                print("--------------------------")
             if player.isLeftPaddle:
                 # Ball bounces off left paddle
                 self.Ball.setX(player.x + player.width)
@@ -197,7 +195,7 @@ class Game:
             self.Ball.velocityY = (-1.0 if self.Ball.velocityY < 0 else 1.0) * \
                                   0.5 * math.sqrt(self.Ball.velocityY**2 + self.Ball.velocityX**2) * \
                                   (1 + 0.8*ball_vel_y_modifier) + player.velocityY
-            self.Ball.velocityY = min(self.Ball.velocityY, 3.5)
+            self.Ball.velocityY = min(self.Ball.velocityY, self.Ball.MAX_INITIAL_VEL*1.5)
 
         # if self.Ball.rect.top >= self.LeftPlayer.rect.top and self.Ball.rect.bottom <= self.LeftPlayer.rect.bottom and self.Ball.rect.left <= self.LeftPlayer.rect.right:
         #     self.Ball.rect.left = self.LeftPlayer.rect.right
