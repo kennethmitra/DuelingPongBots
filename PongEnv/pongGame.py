@@ -1,24 +1,49 @@
 import random
 import pygame
 import numpy as np
+import math
 
 class EnhancedSprite(pygame.sprite.Sprite):
     def __init__(self, width, height, velocityX, velocityY):
         super().__init__()
         self.width = width
         self.height = height
+        self.x = 0.0
+        self.y = 0.0
         self.velocityX = velocityX
         self.velocityY = velocityY
 
     def setPosition(self, position):
-        self.rect.x = position[0]
-        self.rect.y = position[1]
+        self.x = position[0]
+        self.y = position[1]
+        self.rect.x = round(self.x)
+        self.rect.y = round(self.y)
+
+    def setX(self, x):
+        self.x = float(x)
+        self.rect.x = round(x)
+
+    def setY(self, y):
+        self.y = float(y)
+        self.rect.y = round(y)
+
+    def confineVertical(self, minY, maxY, flipVel=False):
+        if self.rect.top < minY:
+            self.setY(minY)
+            if flipVel:
+                self.velocityY *= -1.0
+        elif self.rect.bottom > maxY:
+            self.setY(maxY - self.height)
+            if flipVel:
+                self.velocityY *= -1.0
 
     def deltaX(self, xDelta):
-        self.rect.x += xDelta
+        self.x += xDelta
+        self.rect.x = round(self.x)
 
     def deltaY(self, yDelta):
-        self.rect.y += yDelta
+        self.y += yDelta
+        self.rect.y = round(self.y)
 
     def applyVelocities(self):
         self.deltaX(self.velocityX)
@@ -36,11 +61,13 @@ class Player(EnhancedSprite):
 
         # Set initial position
         if isLeftPaddle:
-            self.rect.left = EDGE_OFFSET
-            self.rect.centery = CANVAS_HEIGHT // 2
+            self.setPosition((EDGE_OFFSET, (CANVAS_HEIGHT-self.height)//2))
+            # self.rect.left = EDGE_OFFSET
+            # self.rect.centery = CANVAS_HEIGHT // 2
         else:
-            self.rect.right = CANVAS_WIDTH - EDGE_OFFSET
-            self.rect.centery = CANVAS_HEIGHT // 2
+            self.setPosition((CANVAS_WIDTH - EDGE_OFFSET - self.width, (CANVAS_HEIGHT-self.height)//2))
+            # self.rect.right = CANVAS_WIDTH - EDGE_OFFSET
+            # self.rect.centery = CANVAS_HEIGHT // 2
 
         self.speed = speed
         self.score = 0
@@ -67,11 +94,13 @@ class Player(EnhancedSprite):
     def reset(self, CANVAS_WIDTH, CANVAS_HEIGHT):
         # Set reset position
         if self.isLeftPaddle:
-            self.rect.left = self.EDGE_OFFSET
-            self.rect.centery = CANVAS_HEIGHT // 2
+            self.setPosition((self.EDGE_OFFSET, (CANVAS_HEIGHT-self.height)//2))
+            # self.rect.left = EDGE_OFFSET
+            # self.rect.centery = CANVAS_HEIGHT // 2
         else:
-            self.rect.right = CANVAS_WIDTH - self.EDGE_OFFSET
-            self.rect.centery = CANVAS_HEIGHT // 2
+            self.setPosition((CANVAS_WIDTH - self.EDGE_OFFSET - self.width, (CANVAS_HEIGHT-self.height)//2))
+            # self.rect.right = CANVAS_WIDTH - EDGE_OFFSET
+            # self.rect.centery = CANVAS_HEIGHT // 2
         
         self.velocityY = 0
 
@@ -89,21 +118,22 @@ class Ball(EnhancedSprite):
         self.rect = self.image.get_rect()
     
     def reset(self, CANVAS_WIDTH, CANVAS_HEIGHT):
-        print("RESET BALL!!!!")
         self.setPosition((CANVAS_WIDTH//2, CANVAS_HEIGHT//2))
 
-        self.velocityX = random.randint(-self.MAX_INITIAL_VEL, self.MAX_INITIAL_VEL)
-        self.velocityY = random.randint(-self.MAX_INITIAL_VEL, self.MAX_INITIAL_VEL)
+        self.velocityX = random.uniform(-self.MAX_INITIAL_VEL*1.25, self.MAX_INITIAL_VEL*1.25)
+        self.velocityY = random.uniform(-self.MAX_INITIAL_VEL*0.75, self.MAX_INITIAL_VEL*0.75)
 
         # Make sure ball doesn't get stuck bouncing up and down
-        while self.velocityX == 0:
-            self.velocityX = random.randint(-self.MAX_INITIAL_VEL, self.MAX_INITIAL_VEL)
+        while abs(self.velocityX) < 0.1:
+            self.velocityX = random.uniform(-self.MAX_INITIAL_VEL, self.MAX_INITIAL_VEL)
 
 class Game:
 
-    def __init__(self, CANVAS_WIDTH, CANVAS_HEIGHT):
+    def __init__(self, CANVAS_WIDTH, CANVAS_HEIGHT, framerate):
         self.CANVAS_WIDTH = CANVAS_WIDTH
         self.CANVAS_HEIGHT = CANVAS_HEIGHT
+        self.framerate = framerate
+        self.clock = pygame.time.Clock()
         self.EDGE_OFFSET = 10
         self.TOP_WALL_Y = 10
         self.BOT_WALL_Y = self.CANVAS_HEIGHT - 10
@@ -115,14 +145,14 @@ class Game:
         self.ball = pygame.sprite.Group()
 
         # Create both players
-        self.LeftPlayer = Player(color=(255,80,80), width=10, height=50, speed=2, isLeftPaddle=True, EDGE_OFFSET=self.EDGE_OFFSET, CANVAS_WIDTH=self.CANVAS_WIDTH, CANVAS_HEIGHT=self.CANVAS_HEIGHT)
-        self.RightPlayer = Player(color=(80,80,255), width=10, height=50, speed=2, isLeftPaddle=False, EDGE_OFFSET=self.EDGE_OFFSET, CANVAS_WIDTH=self.CANVAS_WIDTH, CANVAS_HEIGHT=self.CANVAS_HEIGHT)
+        self.LeftPlayer = Player(color=(255,80,80), width=10, height=50, speed=1, isLeftPaddle=True, EDGE_OFFSET=self.EDGE_OFFSET, CANVAS_WIDTH=self.CANVAS_WIDTH, CANVAS_HEIGHT=self.CANVAS_HEIGHT)
+        self.RightPlayer = Player(color=(80,80,255), width=10, height=50, speed=1, isLeftPaddle=False, EDGE_OFFSET=self.EDGE_OFFSET, CANVAS_WIDTH=self.CANVAS_WIDTH, CANVAS_HEIGHT=self.CANVAS_HEIGHT)
         self.allSprites.add(self.LeftPlayer)
         self.allSprites.add(self.RightPlayer)
         self.playerSprites.add(self.LeftPlayer)
         self.playerSprites.add(self.RightPlayer)
         # Create ball
-        self.Ball = Ball(color=(255,255,255), width=10, height=10, MAX_INITIAL_VEL=3, CANVAS_WIDTH=CANVAS_WIDTH, CANVAS_HEIGHT=CANVAS_HEIGHT)
+        self.Ball = Ball(color=(255,255,255), width=7, height=7, MAX_INITIAL_VEL=1, CANVAS_WIDTH=CANVAS_WIDTH, CANVAS_HEIGHT=CANVAS_HEIGHT)
         self.allSprites.add(self.Ball)
 
     def reset(self):
@@ -140,30 +170,70 @@ class Game:
         self.RightPlayer.performAction(rightAction)
         
         # Handle collisions
-        if self.Ball.rect.top >= self.LeftPlayer.rect.top and self.Ball.rect.bottom <= self.LeftPlayer.rect.bottom and self.Ball.rect.left <= self.LeftPlayer.rect.right:
-            self.Ball.velocityX *= -1  # Flip X velocity
-            self.Ball.velocityY = (self.LeftPlayer.velocityY + self.Ball.velocityY)//2
-            if self.Ball.velocityY == 0:
-                self.Ball.velocityY = random.randint(0, 1) * 2 - 1  # Get a 1 or -1
-        if self.Ball.rect.top >= self.RightPlayer.rect.top and self.Ball.rect.bottom <= self.RightPlayer.rect.bottom and self.Ball.rect.right >= self.RightPlayer.rect.left:
-            self.Ball.velocityX *= -1  # Flip X velocity
-            self.Ball.velocityY = (self.RightPlayer.velocityY + self.Ball.velocityY) // 2
-            if self.Ball.velocityY == 0:
-                self.Ball.velocityY = random.randint(0, 1) * 2 - 1  # Get a 1 or -1
+        playersHit = pygame.sprite.spritecollide(self.Ball, self.playerSprites, dokill=False)
+
+        for player in playersHit:
+            if len(playersHit) > 1:
+                print("Error: Ball hit both players at same time")
+                assert(False)
+            if self.Ball.velocityX > 10:
+                print("--------------------------")
+            if player.isLeftPaddle:
+                # Ball bounces off left paddle
+                self.Ball.setX(player.x + player.width)
+                self.Ball.velocityX *= -1.0 if abs(self.Ball.velocityX) > 0.2 else -2.0
+            else:
+                # Ball bounces off right paddle
+                self.Ball.setX(player.x - self.Ball.width)
+                self.Ball.velocityX *= -1.0 if abs(self.Ball.velocityX) > 0.2 else -2.0
+
+            # Figure out where on paddle ball hit
+            ball_center_y = self.Ball.y + self.Ball.height/2
+            paddle_center_y = player.y + player.height/2
+
+            # If ball hits top of paddle, go down (+vel), if ball hits bottom of paddle go up (-vel)
+            # ball_vel_y_modifier has abs val <= 1 + small value (assuming ball height << paddle height)
+            ball_vel_y_modifier = (paddle_center_y - ball_center_y) / (float(player.height) / 2.0)
+            self.Ball.velocityY = (-1.0 if self.Ball.velocityY < 0 else 1.0) * \
+                                  0.5 * math.sqrt(self.Ball.velocityY**2 + self.Ball.velocityX**2) * \
+                                  (1 + 0.8*ball_vel_y_modifier) + player.velocityY
+            self.Ball.velocityY = min(self.Ball.velocityY, 3.5)
+
+        # if self.Ball.rect.top >= self.LeftPlayer.rect.top and self.Ball.rect.bottom <= self.LeftPlayer.rect.bottom and self.Ball.rect.left <= self.LeftPlayer.rect.right:
+        #     self.Ball.rect.left = self.LeftPlayer.rect.right
+        #     self.Ball.velocityX *= -1  # Flip X velocity
+        #     self.Ball.velocityY = (self.LeftPlayer.velocityY + self.Ball.velocityY) / 2
+        #     if self.Ball.velocityY == 0:
+        #         self.Ball.velocityY = random.randint(0, 1) * 2 - 1  # Get a 1 or -1
+        # if self.Ball.rect.top >= self.RightPlayer.rect.top and self.Ball.rect.bottom <= self.RightPlayer.rect.bottom and self.Ball.rect.right >= self.RightPlayer.rect.left:
+        #     self.Ball.rect.right = self.RightPlayer.rect.left
+        #     self.Ball.velocityX *= -1  # Flip X velocity
+        #     self.Ball.velocityY = (self.RightPlayer.velocityY + self.Ball.velocityY) / 2
+        #     if self.Ball.velocityY == 0:
+        #         self.Ball.velocityY = random.randint(0, 1) * 2 - 1  # Get a 1 or -1
         
-        # Check wall collisions
-        if self.Ball.rect.top < self.TOP_WALL_Y or self.Ball.rect.bottom > self.BOT_WALL_Y:
-            self.Ball.velocityY *= -1
+        # Ball bounces off top and bottom walls
+        self.Ball.confineVertical(self.TOP_WALL_Y, self.BOT_WALL_Y, flipVel=True)
+        # if self.Ball.rect.top <= self.TOP_WALL_Y:
+        #     self.Ball.setY()
+        #     self.Ball.rect.top = self.TOP_WALL_Y
+        #     self.Ball.velocityY *= -1.0
+        #
+        # if self.Ball.rect.top <= self.TOP_WALL_Y:
+        #     self.Ball.rect.top = self.TOP_WALL_Y
+        #     self.Ball.velocityY *= -1.0
 
         # Make sure players don't leave confines of screen
-        if self.LeftPlayer.rect.top < self.TOP_WALL_Y:
-            self.LeftPlayer.rect.top = self.TOP_WALL_Y
-        elif self.LeftPlayer.rect.bottom > self.BOT_WALL_Y:
-            self.LeftPlayer.rect.bottom = self.BOT_WALL_Y
-        if self.RightPlayer.rect.top < self.TOP_WALL_Y:
-            self.RightPlayer.rect.top = self.TOP_WALL_Y
-        elif self.RightPlayer.rect.bottom > self.BOT_WALL_Y:
-            self.RightPlayer.rect.bottom = self.BOT_WALL_Y
+        self.LeftPlayer.confineVertical(self.TOP_WALL_Y, self.BOT_WALL_Y)
+        self.RightPlayer.confineVertical(self.TOP_WALL_Y, self.BOT_WALL_Y)
+        # if self.LeftPlayer.rect.top < self.TOP_WALL_Y:
+        #     self.LeftPlayer.rect.top = self.TOP_WALL_Y
+        # elif self.LeftPlayer.rect.bottom > self.BOT_WALL_Y:
+        #     self.LeftPlayer.rect.bottom = self.BOT_WALL_Y
+        # if self.RightPlayer.rect.top < self.TOP_WALL_Y:
+        #     self.RightPlayer.rect.top = self.TOP_WALL_Y
+        # elif self.RightPlayer.rect.bottom > self.BOT_WALL_Y:
+        #     self.RightPlayer.rect.bottom = self.BOT_WALL_Y
 
         # Check if point is scored
         done = False
@@ -190,6 +260,9 @@ class Game:
         self.canvas.fill(self.BG_COLOR)
         self.allSprites.draw(self.canvas)
         pygame.display.flip()
+
+        if self.framerate > 0:
+            self.clock.tick(self.framerate)
 
     def getScreenRGB(self):
         """
@@ -228,6 +301,8 @@ class Game:
 
         return frame
 
-    def getExtraInfo(self):
-        info = {'ballPos':self.Ball.rect, 'leftPlayerPos':self.LeftPlayer.rect, 'rightPlayerPos':self.RightPlayer.rect}
+    def nonVisualObs(self):
+        info = {'ballCenter': self.Ball.rect.center,
+                'leftPlayerCenter': self.LeftPlayer.rect.center,
+                'rightPlayerCenter': self.RightPlayer.rect.center}
         return info
