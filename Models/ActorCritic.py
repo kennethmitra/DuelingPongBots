@@ -17,7 +17,7 @@ class ActorCritic(GenAlg):
         """
         Construct neural network(s) for actor and critic
         :param obs_cnt: Number of components in an observation
-        :param action_cnt1: Number of possible actions1
+        :param action_cnt: Number of possible actions1
         """
 
         super(ActorCritic, self).__init__(frameskip, isLeftPlayer, True)
