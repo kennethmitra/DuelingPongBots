@@ -74,7 +74,7 @@ class ActorCritic(GenAlg):
         """
         Construct neural network(s) for actor and critic
         :param obs_cnt: Number of components in an observation
-        :param action_cnt: Number of possible actions1
+        :param action_cnt: Number of possible actions
         """
 
         super(ActorCritic, self).__init__(frameskip, isLeftPlayer, True)
@@ -228,7 +228,7 @@ class ActorCritic(GenAlg):
         assert len(data['per_episode_rews']) == len(data['per_episode_length'])
 
         # Don't need to backprop through returns
-        returns = torch.tensor(data['disc_rtg_rews']).to(self.device)
+        returns = torch.tensor(data['disc_rtg_rews']).to(self.model.device)
 
         if normalize_returns:
             returns = (returns) / returns.std()

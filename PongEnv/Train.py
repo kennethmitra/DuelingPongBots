@@ -22,7 +22,6 @@ def train(env, LeftPlayer, RightPlayer, framerate=-1, epochs=10, episodes_per_ep
         
         L_timestep = 0
         R_timestep = 0
-
         L_obs = None
         R_obs = None
 
