@@ -17,20 +17,27 @@ class Buffer:
         self.per_episode_rews = []
         self.per_episode_length = []
 
-    def record(self, timestep, obs, act, logp, val, rew, entropy):
-        self.tstep.append(timestep)
-        self.obs.append(obs)
-        self.act.append(act)
-        self.logp.append(logp)
-        self.val.append(val)
-        self.rew.append(rew)
-        self.entropy.append(entropy)
+    def record(self, timestep=None, obs=None, act=None, logp=None, val=None, rew=None, entropy=None):
+        
+        if timestep is not None: self.tstep.append(timestep)
+        if obs is not None: self.obs.append(obs)
+        if act is not None: self.act.append(act)
+        if logp is not None: self.logp.append(logp)
+        if val is not None: self.val.append(val)
+        if rew is not None: self.rew.append(rew)
+        if entropy is not None: self.entropy.append(entropy)
 
-    def store_episode_stats(self, episode_rewards, episode_disc_rtg_rews, episode_length):
-        self.per_episode_rews.append(torch.tensor(episode_rewards, requires_grad=False).sum().item())
+    def store_episode_stats(self, episode_disc_rtg_rews):
+
+        self.per_episode_rews.append(torch.tensor(self.rew, requires_grad=False).sum().item())
         self.disc_rtg_rews.extend(episode_disc_rtg_rews)
-        self.per_episode_length.append(episode_length)
+        self.per_episode_length.append(len(self.tstep))
 
+        # When ending an episode, make sure all lists have same length
+        assert len(self.tstep) == len(self.obs) == len(self.act) == len(self.logp) == len(self.val) == len(self.rew) == len(self.entropy) == len(self.disc_rtg_rews)
+        assert len(self.per_episode_length) == len(self.per_episode_rews)
+
+        
     def get(self):
         data = dict(tstep=self.tstep, obs=self.obs, act=self.act, logp=self.logp, val=self.val, rew=self.rew,
                     entropy=self.entropy, disc_rtg_rews=self.disc_rtg_rews, per_episode_rews=self.per_episode_rews,
