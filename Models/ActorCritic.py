@@ -11,70 +11,107 @@ import numpy as np
 import time
 from GenAlg import GenAlg
 
+
 class ActorCritic(GenAlg):
     def __init__(self, env, run_name, frameskip, isLeftPlayer):
         """
         Construct neural network(s) for actor and critic
         :param obs_cnt: Number of components in an observation
-        :param action_cnt: Number of possible actions
+        :param action_cnt: Number of possible actions1
         """
 
         super(ActorCritic, self).__init__(frameskip, isLeftPlayer, True)
         output_dim = env.action_space[0]
 
-
         # Hyperparameters --------------------------
-        self.ENVIRONMENT            = 'Pong-v0'
-        self.SEED                   = 543
-        self.LEARNING_RATE          = 0.0011
-        self.DISCOUNT_FACTOR        = 0.997
-        self.ENTROPY_COEFF          = 0.0
-        self.TIMESTEPS_PER_EPOCH    = 10000
-        self.ACTIVATION_FUNC        = torch.relu
-        self.NORMALIZE_REWARDS      = False
-        self.NORMALIZE_ADVANTAGES   = True
-        self.CLIP_GRAD              = False
-        self.NUM_PROCESSES          = 1
-        self.RUN_NAME               = "Pong-A2C"
-        self.NOTES                  = ""
+        self.ENVIRONMENT = 'Pong-v0'
+        self.SEED = 543
+        self.LEARNING_RATE = 0.0011
+        self.DISCOUNT_FACTOR = 0.997
+        self.ENTROPY_COEFF = 0.0
+        self.TIMESTEPS_PER_EPOCH = 10000
+        self.ACTIVATION_FUNC = torch.relu
+        self.NORMALIZE_REWARDS = False
+        self.NORMALIZE_ADVANTAGES = True
+        self.CLIP_GRAD = False
+        self.NUM_PROCESSES = 1
+        self.RUN_NAME = "Pong-A2C"
+        self.NOTES = ""
         # -----------------------------------------
-        
+
         self.episode_rewards = []
         self.log = Logger(run_name=None, refresh_secs=30)
-        self.optimizer = torch.optim.Adam(params=self.parameters(), lr=self.LEARNING_RATE)
+        self.optimizer = torch.optim.Adam(params=self.model.parameters(), lr=self.LEARNING_RATE)
 
         self.log.log_hparams(ENVIRONMENT=self.ENVIRONMENT,
                              SEED=self.SEED,
                              model=self,
                              LEARNING_RATE=self.LEARNING_RATE,
                              DISCOUNT_FACTOR=self.DISCOUNT_FACTOR,
-                             ENTROPY_COEFF=self.ENTROPY_COEFF, 
+                             ENTROPY_COEFF=self.ENTROPY_COEFF,
                              activation_func=self.ACTIVATION_FUNC,
-                             tsteps_per_epoch=self.TIMESTEPS_PER_EPOCH, 
+                             tsteps_per_epoch=self.TIMESTEPS_PER_EPOCH,
                              normalize_rewards=self.NORMALIZE_REWARDS,
-                             normalize_advantages=self.NORMALIZE_ADVANTAGES, 
+                             normalize_advantages=self.NORMALIZE_ADVANTAGES,
                              clip_grad=self.CLIP_GRAD, notes=self.NOTES, display=True)
 
-
         self.buf = Buffer()
-        #Shared conv layers for feature extraction
-        self.conv1 = torch.nn.Conv2d(1,64,3)
-        self.max_pool = torch.nn.MaxPool2d(2)
-        self.conv2 = torch.nn.Conv2d(64,128,5)
 
+        class Model(torch.nn.Module):
+            super(Model, self).__init__()
 
-        # Actor Specific
-        self.actor_layer1 = torch.nn.Linear(128*61*61, 64)
-        self.actor_layer2 = torch.nn.Linear(64, output_dim)
-        torch.nn.init.xavier_uniform_(self.actor_layer1.weight)
-        torch.nn.init.xavier_uniform_(self.actor_layer2.weight)
+            def __init__(self):
+                # Shared conv layers for feature extraction
+                self.conv1 = torch.nn.Conv2d(1, 64, 3)
+                self.max_pool = torch.nn.MaxPool2d(2)
+                self.conv2 = torch.nn.Conv2d(64, 128, 5)
 
-        #Critic Specific
-        self.critic_layer1 = torch.nn.Linear(128*61*61, 64)
-        self.critic_layer2 = torch.nn.Linear(64, output_dim)
-        torch.nn.init.xavier_uniform_(self.critic_layer1.weight)
-        torch.nn.init.xavier_uniform_(self.critic_layer2.weight)
+                # Actor Specific
+                self.actor_layer1 = torch.nn.Linear(128 * 61 * 61, 64)
+                self.actor_layer2 = torch.nn.Linear(64, output_dim)
+                torch.nn.init.xavier_uniform_(self.actor_layer1.weight)
+                torch.nn.init.xavier_uniform_(self.actor_layer2.weight)
 
+                # Critic Specific
+                self.critic_layer1 = torch.nn.Linear(128 * 61 * 61, 64)
+                self.critic_layer2 = torch.nn.Linear(64, output_dim)
+                torch.nn.init.xavier_uniform_(self.critic_layer1.weight)
+                torch.nn.init.xavier_uniform_(self.critic_layer2.weight)
+
+            def forward(self, obs):
+                """
+                Compute action distribution and value from an observation
+                :param obs: observation with len obs_cnt
+                :return: Action distribution (Categorical) and value (tensor)
+                """
+
+                if isinstance(obs, np.ndarray):
+                    obs = torch.from_numpy(obs).float()
+
+                # Separate Actor and Critic Networks
+                obs = self.conv1(obs)
+                obs = F.relu(obs)
+                obs = self.max_pool(obs)
+                obs = self.conv2(obs)
+                obs = self.max_pool(obs)
+                obs = F.relu(obs)
+                obs = obs.view(-1, 7808 * 61)
+
+                # Actor Specific
+                actor_intermed = self.actor_layer1(obs)
+                actor_intermed = torch.nn.Tanh()(actor_intermed)
+                actor_Logits = self.actor_layer2(actor_intermed)
+
+                # Critic Logits
+                critic_intermed = self.critic_layer1(obs)
+                critic_intermed = torch.nn.Tanh()(critic_intermed)
+                value = self.critic_layer2(critic_intermed)
+
+                return actor_Logits, value
+
+        self.model = Model()
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.model.device = device
         if run_name is None:
             run_name = Path(__file__).stem
 
@@ -85,40 +122,6 @@ class ActorCritic(GenAlg):
                 break
         Path(f'./saves/{run_name}').mkdir(parents=True, exist_ok=True)
         self.save_path = f'./saves/{run_name}'
-
-
-    def forward(self, obs):
-        """
-        Compute action distribution and value from an observation
-        :param obs: observation with len obs_cnt
-        :return: Action distribution (Categorical) and value (tensor)
-        """
-
-        if isinstance(obs, np.ndarray):
-            obs = torch.from_numpy(obs).float()
-
-        # Separate Actor and Critic Networks
-        obs = self.conv1(obs)
-        obs = F.relu(obs)
-        obs = self.max_pool(obs)
-        obs = self.conv2(obs)
-        obs = self.max_pool(obs)
-        obs = F.relu(obs)
-        obs = obs.view(-1,7808*61)
-
-
-        #Actor Specific
-        actor_intermed = self.actor_layer1(obs)
-        actor_intermed = torch.nn.Tanh()(actor_intermed)
-        actor_Logits = self.actor_layer2(actor_intermed)
-
-        #Critic Logits
-        critic_intermed = self.critic_layer1(obs)
-        critic_intermed = torch.nn.Tanh()(critic_intermed)
-        value = self.critic_layer2(critic_intermed)
-
-        return actor_Logits, value
-
 
     def predict(self, obs):
         """
@@ -131,7 +134,7 @@ class ActorCritic(GenAlg):
 
         obs = obs.to(self.device)
 
-        actionLogits, value = self.forward(obs)
+        actionLogits, value = self.model.forward(obs)
 
         action_dist = Categorical(logits=actionLogits)
         return action_dist, value
@@ -146,9 +149,10 @@ class ActorCritic(GenAlg):
         action_dist, value = self.predict(obs)
         action = action_dist.sample()
         entropy = action_dist.entropy()
-        
-        if train_mode: # Buffer is only used in training
-            self.buf.record(timestep=timestep, obs=obs, act=action, logp=action_dist.log_prob(action), val=value, entropy=entropy)
+
+        if train_mode:  # Buffer is only used in training
+            self.buf.record(timestep=timestep, obs=obs, act=action, logp=action_dist.log_prob(action), val=value,
+                            entropy=entropy)
 
         return action
 
@@ -156,13 +160,13 @@ class ActorCritic(GenAlg):
         try:
             torch.save({'epoch': epoch,
                         'optimizer_params': self.optimizer.state_dict(),
-                        'model_state': self.state_dict()}, f'{self.save_path}/epo{epoch}.save')
+                        'model_state': self.model.state_dict()}, f'{self.save_path}/epo{epoch}.save')
         except:
             print('ERROR calling model.save()')
 
     def load(self, path, load_optim=True):
         checkpoint = torch.load(path)
-        self.load_state_dict(checkpoint['model_state'])
+        self.model.load_state_dict(checkpoint['model_state'])
         if load_optim:
             self.optimizer.load_state_dict(checkpoint['optimizer_params'])
         else:
@@ -193,11 +197,11 @@ class ActorCritic(GenAlg):
 
     def train_batch(self):
 
-        data=self.buf.get()
+        data = self.buf.get()
         normalize_returns = self.NORMALIZE_REWARDS
         normalize_advantages = self.NORMALIZE_ADVANTAGES
-        entropy_coeff=self.ENTROPY_COEFF
-        clip_grad=self.CLIP_GRAD
+        entropy_coeff = self.ENTROPY_COEFF
+        clip_grad = self.CLIP_GRAD
 
         update_start_time = time.perf_counter()
 
@@ -237,7 +241,7 @@ class ActorCritic(GenAlg):
         # Perform backprop step
         total_loss.backward()
         if clip_grad:
-            torch.nn.utils.clip_grad_norm_(self.parameters(), 0.5)
+            torch.nn.utils.clip_grad_norm_(self.model.parameters(), 0.5)
         self.optimizer.step()
 
         # Compute info for logging
@@ -248,23 +252,21 @@ class ActorCritic(GenAlg):
         num_episodes = len(data['per_episode_length'])
 
         # Package logging info
-        epoch_info = dict(actor_loss=actor_loss, critic_loss=critic_loss, entropy_loss=entropy_loss, entropy_avg=entropy_avg,
-                    total_loss=total_loss, avg_ep_len=avg_ep_len, avg_ep_raw_rew=avg_ep_raw_rew,
-                    epoch_timesteps=epoch_timesteps, num_episodes=num_episodes, advantages=advantages,
-                    pred_values=data['val'], disc_rews=returns, raw_rew=raw_rews,
-                    update_time=(time.perf_counter() - update_start_time))
-        #Log
-        self.log(epoch,epoch_info)
-        #Clear buffer
+        epoch_info = dict(actor_loss=actor_loss, critic_loss=critic_loss, entropy_loss=entropy_loss,
+                          entropy_avg=entropy_avg,
+                          total_loss=total_loss, avg_ep_len=avg_ep_len, avg_ep_raw_rew=avg_ep_raw_rew,
+                          epoch_timesteps=epoch_timesteps, num_episodes=num_episodes, advantages=advantages,
+                          pred_values=data['val'], disc_rews=returns, raw_rew=raw_rews,
+                          update_time=(time.perf_counter() - update_start_time))
+        # Log
+        self.log(epoch, epoch_info)
+        # Clear buffer
         self.buf.clear()
-
-
-
 
 # if __name__ == '__main__':
 #     print("-------------------------------GPU INFO--------------------------------------------")
 #     print('Available devices ', torch.cuda.device_count())
-#     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
 #     print('Current cuda device ', device)
 #     print('Current CUDA device name ', torch.cuda.get_device_name(device))
 #     print("-----------------------------------------------------------------------------------")
@@ -276,6 +278,7 @@ class ActorCritic(GenAlg):
 #     env = gym.make(ENVIRONMENT)
 #     env.seed(SEED)
 
+#     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 #     model = ActorCritic (env = env, run_name=RUN_NAME)
 #     model.device = device
 #     model = model.to(model.device)
