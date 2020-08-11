@@ -8,6 +8,7 @@ def test(LeftPlayer, RightPlayer, framerate=-1):
     """
     Takes in two players. Feeds players observations and gets actions from player after player.frameskip frames
     Repeats previous action until a new action is obtained
+    If framerate is -1, runs with unlimited framerate. If framerate is > 0
     """
     env = PongEnv(framerate=framerate)
 

@@ -4,6 +4,9 @@ import numpy as np
 import math
 
 class EnhancedSprite(pygame.sprite.Sprite):
+    """
+    EnhancedSprite extends pygame's Sprite class and adds useful features like velocity and floating point positioning
+    """
     def __init__(self, width, height, velocityX, velocityY):
         super().__init__()
         self.width = width
@@ -14,38 +17,68 @@ class EnhancedSprite(pygame.sprite.Sprite):
         self.velocityY = velocityY
 
     def setPosition(self, position):
+        """
+        Set sprite position to specified coordinated
+        :param position: Tuple (X: float, Y: float)
+        """
         self.x = position[0]
         self.y = position[1]
         self.rect.x = round(self.x)
         self.rect.y = round(self.y)
 
     def setX(self, x):
+        """
+        Set sprite x coordinate
+        :param x: float X
+        """
         self.x = float(x)
         self.rect.x = round(x)
 
     def setY(self, y):
+        """
+        Set sprite y coordinate
+        :param y: float y
+        """
         self.y = float(y)
         self.rect.y = round(y)
 
     def confineVertical(self, minY, maxY, flipVel=False):
-        if self.rect.top < minY:
+        """
+        Checks if top of sprite is above minY or if bottom of sprite is below maxY and moves sprite back within confines
+        If flipVel is true and sprite is touching a border, then multiply velocityY by -1 (so it bounces off)
+        :param minY: Top border
+        :param maxY: Bottom border
+        :param flipVel: boolean
+        """
+        if self.rect.top <= minY:
             self.setY(minY)
             if flipVel:
                 self.velocityY *= -1.0
-        elif self.rect.bottom > maxY:
+        elif self.rect.bottom >= maxY:
             self.setY(maxY - self.height)
             if flipVel:
                 self.velocityY *= -1.0
 
     def deltaX(self, xDelta):
+        """
+        Move sprite in positive x direction by xDelta amount
+        :param xDelta: float
+        """
         self.x += xDelta
         self.rect.x = round(self.x)
 
     def deltaY(self, yDelta):
+        """
+        Move sprite in positive y direction by yDelta amount
+        :param yDelta: float
+        """
         self.y += yDelta
         self.rect.y = round(self.y)
 
     def applyVelocities(self):
+        """
+        Moves sprite in x and y directions by velocity amount
+        """
         self.deltaX(self.velocityX)
         self.deltaY(self.velocityY)
 
@@ -197,41 +230,14 @@ class Game:
                                   (1 + 0.8*ball_vel_y_modifier) + player.velocityY
             self.Ball.velocityY = min(self.Ball.velocityY, self.Ball.MAX_INITIAL_VEL*1.5)
 
-        # if self.Ball.rect.top >= self.LeftPlayer.rect.top and self.Ball.rect.bottom <= self.LeftPlayer.rect.bottom and self.Ball.rect.left <= self.LeftPlayer.rect.right:
-        #     self.Ball.rect.left = self.LeftPlayer.rect.right
-        #     self.Ball.velocityX *= -1  # Flip X velocity
-        #     self.Ball.velocityY = (self.LeftPlayer.velocityY + self.Ball.velocityY) / 2
-        #     if self.Ball.velocityY == 0:
-        #         self.Ball.velocityY = random.randint(0, 1) * 2 - 1  # Get a 1 or -1
-        # if self.Ball.rect.top >= self.RightPlayer.rect.top and self.Ball.rect.bottom <= self.RightPlayer.rect.bottom and self.Ball.rect.right >= self.RightPlayer.rect.left:
-        #     self.Ball.rect.right = self.RightPlayer.rect.left
-        #     self.Ball.velocityX *= -1  # Flip X velocity
-        #     self.Ball.velocityY = (self.RightPlayer.velocityY + self.Ball.velocityY) / 2
-        #     if self.Ball.velocityY == 0:
-        #         self.Ball.velocityY = random.randint(0, 1) * 2 - 1  # Get a 1 or -1
         
         # Ball bounces off top and bottom walls
         self.Ball.confineVertical(self.TOP_WALL_Y, self.BOT_WALL_Y, flipVel=True)
-        # if self.Ball.rect.top <= self.TOP_WALL_Y:
-        #     self.Ball.setY()
-        #     self.Ball.rect.top = self.TOP_WALL_Y
-        #     self.Ball.velocityY *= -1.0
-        #
-        # if self.Ball.rect.top <= self.TOP_WALL_Y:
-        #     self.Ball.rect.top = self.TOP_WALL_Y
-        #     self.Ball.velocityY *= -1.0
+
 
         # Make sure players don't leave confines of screen
         self.LeftPlayer.confineVertical(self.TOP_WALL_Y, self.BOT_WALL_Y)
         self.RightPlayer.confineVertical(self.TOP_WALL_Y, self.BOT_WALL_Y)
-        # if self.LeftPlayer.rect.top < self.TOP_WALL_Y:
-        #     self.LeftPlayer.rect.top = self.TOP_WALL_Y
-        # elif self.LeftPlayer.rect.bottom > self.BOT_WALL_Y:
-        #     self.LeftPlayer.rect.bottom = self.BOT_WALL_Y
-        # if self.RightPlayer.rect.top < self.TOP_WALL_Y:
-        #     self.RightPlayer.rect.top = self.TOP_WALL_Y
-        # elif self.RightPlayer.rect.bottom > self.BOT_WALL_Y:
-        #     self.RightPlayer.rect.bottom = self.BOT_WALL_Y
 
         # Check if point is scored
         done = False
@@ -269,7 +275,7 @@ class Game:
         Returns
         --------
         numpy uint8 array
-            Returns a numpy array with the shape (width, height, 3).
+            Returns a numpy array with the shape (canvas width, canvas height, 3).
         """
         frame = pygame.surfarray.array3d(pygame.display.get_surface()).astype(np.uint8)
         frame = np.rot90(frame, 1, axes=(0, 1))
@@ -284,7 +290,7 @@ class Game:
         Returns
         --------
         numpy uint8 array
-                Returns a numpy array with the shape (width, height).
+                Returns a numpy array with the shape (canvas width, canvas height).
         """
         frame = self.getScreenRGB()
         frame = 0.21 * frame[:, :, 0] + 0.72 * frame[:, :, 1] + 0.07 * frame[:, :, 2]
@@ -293,6 +299,10 @@ class Game:
         return frame
 
     def getScreenBlackWhite(self):
+        """
+        Get current game screen in black and white. Intensities above certain amount are white, else black
+        :return: Logical array with shape (canvas width, canvas height)
+        """
         frame = self.getScreenRGB()
         frame = 0.21 * frame[:, :, 0] + 0.72 * frame[:, :, 1] + 0.07 * frame[:, :, 2]
         frame = frame > 80.0
@@ -300,6 +310,11 @@ class Game:
         return frame
 
     def nonVisualObs(self):
+        """
+        Get the state of the game represented by a dictionary.
+        Used in Hardcoded opponent
+        :return: dict
+        """
         info = {'ballCenter': self.Ball.rect.center,
                 'leftPlayerCenter': self.LeftPlayer.rect.center,
                 'rightPlayerCenter': self.RightPlayer.rect.center}
