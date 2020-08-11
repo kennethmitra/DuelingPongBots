@@ -11,7 +11,6 @@ import numpy as np
 import time
 from GenAlg import GenAlg
 
-
 class ActorCritic(GenAlg):
 
     class Model(torch.nn.Module):
@@ -31,7 +30,7 @@ class ActorCritic(GenAlg):
 
             # Critic Specific
             self.critic_layer1 = torch.nn.Linear(128 * 61 * 61, 64)
-            self.critic_layer2 = torch.nn.Linear(64, output_dim)
+            self.critic_layer2 = torch.nn.Linear(64, 1)
             torch.nn.init.xavier_uniform_(self.critic_layer1.weight)
             torch.nn.init.xavier_uniform_(self.critic_layer2.weight)
 
@@ -104,8 +103,10 @@ class ActorCritic(GenAlg):
         print("-------------------------------GPU INFO--------------------------------------------")
         print('Available devices ', torch.cuda.device_count())
         self.model.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.model.device = "cpu"
         print('Current cuda device ', self.model.device)
-        print('Current CUDA device name ', torch.cuda.get_device_name(self.model.device))
+        if self.model.device != "cpu":
+            print('Current CUDA device name ', torch.cuda.get_device_name(self.model.device))
         print("-----------------------------------------------------------------------------------")
 
         self.model.to(self.model.device)
@@ -157,6 +158,7 @@ class ActorCritic(GenAlg):
         return action_dist, value
 
     def get_action(self, obs, timestep, train_mode=True):
+        print("ts: ", timestep)
         """
         Given an observation, predict action distribution and value and sample action
         Store log prob of sampled action, value calculated by critic, entropy of action prob dist
@@ -213,7 +215,7 @@ class ActorCritic(GenAlg):
             self.episode_rewards.clear()
 
     def train_batch(self, epoch):
-
+        print("Training epoch", epoch)
         data = self.buf.get()
         normalize_returns = self.NORMALIZE_REWARDS
         normalize_advantages = self.NORMALIZE_ADVANTAGES

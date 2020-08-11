@@ -3,7 +3,7 @@ from Models.HardcodedOpponent import HardcodedOpponent
 from Models.GenAlg import GenAlg
 from Models.ActorCritic import ActorCritic
 from PongEnv import PongEnv
-
+from MemoryGrabber import MemoryGrabber
 
 def train(env, LeftPlayer, RightPlayer, framerate=-1, epochs=10, episodes_per_epoch=3):
     """
@@ -62,7 +62,7 @@ def train(env, LeftPlayer, RightPlayer, framerate=-1, epochs=10, episodes_per_ep
 
                 frame += 1
 
-                if render and False:
+                if render:
                     env.render()
                 
                 if done:
@@ -83,6 +83,9 @@ def train(env, LeftPlayer, RightPlayer, framerate=-1, epochs=10, episodes_per_ep
 
 
 if __name__ == '__main__':
-    FRAME_RATE = 60
+    # m = MemoryGrabber()
+    # m.clear_mem(0.85)
+
+    FRAME_RATE = -1
     env = PongEnv(framerate=FRAME_RATE)
     train(env=env, LeftPlayer=ActorCritic(env=env, run_name="A2C_Algo", frameskip=1, isLeftPlayer=True), RightPlayer=HardcodedOpponent(isLeftPlayer=False, frameskip=5), framerate=FRAME_RATE, epochs=10, episodes_per_epoch=5)
