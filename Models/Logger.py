@@ -14,7 +14,7 @@ class Logger:
                     tsteps_per_epoch, normalize_rewards, normalize_advantages, clip_grad, notes, display=True):
         self.writer.add_text("Hyperparams/Environment", ENVIRONMENT, 0)
         self.writer.add_text("Hyperparams/Seed", str(SEED), 0)
-        # self.writer.add_text("Hyperparams/Model", str(model), 0)
+        self.writer.add_text("Hyperparams/Model", str(model), 0)
         self.writer.add_text("Hyperparams/Optimizer", str(model.optimizer), 0)
         self.writer.add_text("Hyperparams/Learning_Rate", str(LEARNING_RATE), 0)
         self.writer.add_text("Hyperparams/Discount_Factor", str(DISCOUNT_FACTOR), 0)
@@ -32,7 +32,7 @@ class Logger:
             print('------------------------------Hyperparameters--------------------------------------------------')
             print(f'ENVIRONMENT: {ENVIRONMENT}')
             print(f'SEED: {SEED}')
-            # print(f'MODEL: {model}')
+            print(f'MODEL: {model}')
             print(f'OPTIMIZER: {model.optimizer}')
             print(f'LEARNING_RATE: {ACTOR_LEARNING_RATE}')
             print(f'DISCOUNT_FACTOR: {DISCOUNT_FACTOR}')

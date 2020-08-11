@@ -13,6 +13,59 @@ from GenAlg import GenAlg
 
 
 class ActorCritic(GenAlg):
+
+    class Model(torch.nn.Module):
+
+        def __init__(self, output_dim):
+            # Shared conv layers for feature extraction
+            super(Model, self).__init__()
+            self.conv1 = torch.nn.Conv2d(1, 64, 3)
+            self.max_pool = torch.nn.MaxPool2d(2)
+            self.conv2 = torch.nn.Conv2d(64, 128, 5)
+
+            # Actor Specific
+            self.actor_layer1 = torch.nn.Linear(128 * 61 * 61, 64)
+            self.actor_layer2 = torch.nn.Linear(64, output_dim)
+            torch.nn.init.xavier_uniform_(self.actor_layer1.weight)
+            torch.nn.init.xavier_uniform_(self.actor_layer2.weight)
+
+            # Critic Specific
+            self.critic_layer1 = torch.nn.Linear(128 * 61 * 61, 64)
+            self.critic_layer2 = torch.nn.Linear(64, output_dim)
+            torch.nn.init.xavier_uniform_(self.critic_layer1.weight)
+            torch.nn.init.xavier_uniform_(self.critic_layer2.weight)
+
+        def forward(self, obs):
+            """
+            Compute action distribution and value from an observation
+            :param obs: observation with len obs_cnt
+            :return: Action distribution (Categorical) and value (tensor)
+            """
+
+            if isinstance(obs, np.ndarray):
+                obs = torch.from_numpy(obs).float()
+
+            # Separate Actor and Critic Networks
+            obs = self.conv1(obs)
+            obs = F.relu(obs)
+            obs = self.max_pool(obs)
+            obs = self.conv2(obs)
+            obs = self.max_pool(obs)
+            obs = F.relu(obs)
+            obs = obs.view(-1, 7808 * 61)
+
+            # Actor Specific
+            actor_intermed = self.actor_layer1(obs)
+            actor_intermed = torch.nn.Tanh()(actor_intermed)
+            actor_Logits = self.actor_layer2(actor_intermed)
+
+            # Critic Logits
+            critic_intermed = self.critic_layer1(obs)
+            critic_intermed = torch.nn.Tanh()(critic_intermed)
+            value = self.critic_layer2(critic_intermed)
+
+            return actor_Logits, value
+
     def __init__(self, env, run_name, frameskip, isLeftPlayer):
         """
         Construct neural network(s) for actor and critic
@@ -40,12 +93,21 @@ class ActorCritic(GenAlg):
         # -----------------------------------------
 
         self.episode_rewards = []
+        self.model = self.Model(output_dim=output_dim)
+
+        print("-------------------------------GPU INFO--------------------------------------------")
+        print('Available devices ', torch.cuda.device_count())
+        self.model.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        print('Current cuda device ', self.model.device)
+        print('Current CUDA device name ', torch.cuda.get_device_name(self.model.device))
+        print("-----------------------------------------------------------------------------------")
+
         self.log = Logger(run_name=None, refresh_secs=30)
         self.optimizer = torch.optim.Adam(params=self.model.parameters(), lr=self.LEARNING_RATE)
 
         self.log.log_hparams(ENVIRONMENT=self.ENVIRONMENT,
                              SEED=self.SEED,
-                             model=self,
+                             model=self.model,
                              LEARNING_RATE=self.LEARNING_RATE,
                              DISCOUNT_FACTOR=self.DISCOUNT_FACTOR,
                              ENTROPY_COEFF=self.ENTROPY_COEFF,
@@ -57,61 +119,7 @@ class ActorCritic(GenAlg):
 
         self.buf = Buffer()
 
-        class Model(torch.nn.Module):
-            super(Model, self).__init__()
 
-            def __init__(self):
-                # Shared conv layers for feature extraction
-                self.conv1 = torch.nn.Conv2d(1, 64, 3)
-                self.max_pool = torch.nn.MaxPool2d(2)
-                self.conv2 = torch.nn.Conv2d(64, 128, 5)
-
-                # Actor Specific
-                self.actor_layer1 = torch.nn.Linear(128 * 61 * 61, 64)
-                self.actor_layer2 = torch.nn.Linear(64, output_dim)
-                torch.nn.init.xavier_uniform_(self.actor_layer1.weight)
-                torch.nn.init.xavier_uniform_(self.actor_layer2.weight)
-
-                # Critic Specific
-                self.critic_layer1 = torch.nn.Linear(128 * 61 * 61, 64)
-                self.critic_layer2 = torch.nn.Linear(64, output_dim)
-                torch.nn.init.xavier_uniform_(self.critic_layer1.weight)
-                torch.nn.init.xavier_uniform_(self.critic_layer2.weight)
-
-            def forward(self, obs):
-                """
-                Compute action distribution and value from an observation
-                :param obs: observation with len obs_cnt
-                :return: Action distribution (Categorical) and value (tensor)
-                """
-
-                if isinstance(obs, np.ndarray):
-                    obs = torch.from_numpy(obs).float()
-
-                # Separate Actor and Critic Networks
-                obs = self.conv1(obs)
-                obs = F.relu(obs)
-                obs = self.max_pool(obs)
-                obs = self.conv2(obs)
-                obs = self.max_pool(obs)
-                obs = F.relu(obs)
-                obs = obs.view(-1, 7808 * 61)
-
-                # Actor Specific
-                actor_intermed = self.actor_layer1(obs)
-                actor_intermed = torch.nn.Tanh()(actor_intermed)
-                actor_Logits = self.actor_layer2(actor_intermed)
-
-                # Critic Logits
-                critic_intermed = self.critic_layer1(obs)
-                critic_intermed = torch.nn.Tanh()(critic_intermed)
-                value = self.critic_layer2(critic_intermed)
-
-                return actor_Logits, value
-
-        self.model = Model()
-        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        self.model.device = device
         if run_name is None:
             run_name = Path(__file__).stem
 
