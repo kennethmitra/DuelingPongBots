@@ -12,24 +12,25 @@ import time
 from GenAlg import GenAlg
 
 class ActorCritic(GenAlg):
-
+    import torch.nn.functional as F
     class Model(torch.nn.Module):
-
         def __init__(self, output_dim):
             # Shared conv layers for feature extraction
-            super(ActorCritic.Model, self).__init__()
-            self.conv1 = torch.nn.Conv2d(1, 64, 3)
+            super(Model, self).__init__()
+            f1 = 64
+            self.conv1 = torch.nn.Conv2d(1, f1, 5)
             self.max_pool = torch.nn.MaxPool2d(2)
-            self.conv2 = torch.nn.Conv2d(64, 128, 5)
+            f2 = 32
+            self.conv2 = torch.nn.Conv2d(f1, f2, 5)
 
             # Actor Specific
-            self.actor_layer1 = torch.nn.Linear(128 * 61 * 61, 64)
+            self.actor_layer1 = torch.nn.Linear(f2 * 61 * 61, 64)
             self.actor_layer2 = torch.nn.Linear(64, output_dim)
             torch.nn.init.xavier_uniform_(self.actor_layer1.weight)
             torch.nn.init.xavier_uniform_(self.actor_layer2.weight)
 
             # Critic Specific
-            self.critic_layer1 = torch.nn.Linear(128 * 61 * 61, 64)
+            self.critic_layer1 = torch.nn.Linear(f2 * 61 * 61, 64)
             self.critic_layer2 = torch.nn.Linear(64, 1)
             torch.nn.init.xavier_uniform_(self.critic_layer1.weight)
             torch.nn.init.xavier_uniform_(self.critic_layer2.weight)
@@ -55,7 +56,7 @@ class ActorCritic(GenAlg):
             obs = self.conv2(obs)
             obs = self.max_pool(obs)
             obs = F.relu(obs)
-            obs = obs.view(-1, 7808 * 61)
+            obs = obs.view(-1, 32 * 61 * 61)
 
             # Actor Specific
             actor_intermed = self.actor_layer1(obs)
