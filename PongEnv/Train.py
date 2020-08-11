@@ -43,15 +43,14 @@ def train(env, LeftPlayer, RightPlayer, framerate=-1, epochs=10, episodes_per_ep
                 if frame % LeftPlayer.frameskip == 0:
                     # Store timestep
                     if frame != 0:
-                        LeftPlayer.end_tstep(reward=L_reward) # Store reward for last timestep
-                    
-                    L_action = LeftPlayer.get_action(obs, timestep=L_timestep, train_mode=True) # get_action stores obs, logprobs, and any other intermediary stuff
+                        LeftPlayer.end_tstep(reward=L_reward)  # Store reward for last timestep
+                    L_action = LeftPlayer.get_action(obs[0 if LeftPlayer.obsIsImage else 1], timestep=L_timestep, train_mode=True) # get_action stores obs, logprobs, and any other intermediary stuff
                     L_timestep += 1
                 if frame % RightPlayer.frameskip == 0:
                     # Store timestep
                     if frame != 0:
                         RightPlayer.end_tstep(reward=R_reward)
-                    R_action = RightPlayer.get_action(obs, timestep=R_timestep, train_mode=True)
+                    R_action = RightPlayer.get_action(obs[0 if RightPlayer.obsIsImage else 1], timestep=R_timestep, train_mode=True)
                     R_timestep += 1
 
                 # Perform actions
@@ -64,7 +63,7 @@ def train(env, LeftPlayer, RightPlayer, framerate=-1, epochs=10, episodes_per_ep
 
                 frame += 1
 
-                if render:
+                if render and False:
                     env.render()
                 
                 if done:
@@ -80,8 +79,8 @@ def train(env, LeftPlayer, RightPlayer, framerate=-1, epochs=10, episodes_per_ep
                     RightPlayer.save()
             
             # Train on epoch data
-            LeftPlayer.train_batch()
-            RightPlayer.train_batch()
+            LeftPlayer.train_batch(epoch)
+            RightPlayer.train_batch(epoch)
 
 
 if __name__ == '__main__':

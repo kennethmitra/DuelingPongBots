@@ -18,7 +18,7 @@ class ActorCritic(GenAlg):
 
         def __init__(self, output_dim):
             # Shared conv layers for feature extraction
-            super(Model, self).__init__()
+            super(ActorCritic.Model, self).__init__()
             self.conv1 = torch.nn.Conv2d(1, 64, 3)
             self.max_pool = torch.nn.MaxPool2d(2)
             self.conv2 = torch.nn.Conv2d(64, 128, 5)
@@ -44,6 +44,10 @@ class ActorCritic(GenAlg):
 
             if isinstance(obs, np.ndarray):
                 obs = torch.from_numpy(obs).float()
+
+            # Add batch dimension and channel dimension (256, 256) -> (1, 1, 256, 256) | (n, c, h, w)
+            obs = torch.unsqueeze(obs, 0)
+            obs = torch.unsqueeze(obs, 0)
 
             # Separate Actor and Critic Networks
             obs = self.conv1(obs)
@@ -74,7 +78,7 @@ class ActorCritic(GenAlg):
         """
 
         super(ActorCritic, self).__init__(frameskip, isLeftPlayer, True)
-        output_dim = env.action_space[0]
+        output_dim = env.action_space[0].n
 
         # Hyperparameters --------------------------
         self.ENVIRONMENT = 'Pong-v0'
@@ -93,7 +97,9 @@ class ActorCritic(GenAlg):
         # -----------------------------------------
 
         self.episode_rewards = []
+
         self.model = self.Model(output_dim=output_dim)
+
 
         print("-------------------------------GPU INFO--------------------------------------------")
         print('Available devices ', torch.cuda.device_count())
@@ -102,12 +108,15 @@ class ActorCritic(GenAlg):
         print('Current CUDA device name ', torch.cuda.get_device_name(self.model.device))
         print("-----------------------------------------------------------------------------------")
 
+        self.model.to(self.model.device)
+
         self.log = Logger(run_name=None, refresh_secs=30)
         self.optimizer = torch.optim.Adam(params=self.model.parameters(), lr=self.LEARNING_RATE)
 
         self.log.log_hparams(ENVIRONMENT=self.ENVIRONMENT,
                              SEED=self.SEED,
                              model=self.model,
+                             optimizer=self.optimizer,
                              LEARNING_RATE=self.LEARNING_RATE,
                              DISCOUNT_FACTOR=self.DISCOUNT_FACTOR,
                              ENTROPY_COEFF=self.ENTROPY_COEFF,
@@ -140,7 +149,7 @@ class ActorCritic(GenAlg):
         if isinstance(obs, np.ndarray):
             obs = torch.from_numpy(obs).float()
 
-        obs = obs.to(self.device)
+        obs = obs.to(self.model.device)
 
         actionLogits, value = self.model.forward(obs)
 
@@ -162,7 +171,7 @@ class ActorCritic(GenAlg):
             self.buf.record(timestep=timestep, obs=obs, act=action, logp=action_dist.log_prob(action), val=value,
                             entropy=entropy)
 
-        return action
+        return action.item()
 
     def save(self, epoch):
         try:
@@ -192,7 +201,7 @@ class ActorCritic(GenAlg):
 
     def end_tstep(self, reward, end_episode=False):
         # Record timestep reward
-        self.epoch_rewards.append(reward)
+        self.episode_rewards.append(reward)
         self.buf.record(rew=reward)
 
         # Handle end of episode
@@ -203,7 +212,7 @@ class ActorCritic(GenAlg):
             self.buf.store_episode_stats(episode_disc_rtg_rews=ep_disc_rtg)
             self.episode_rewards.clear()
 
-    def train_batch(self):
+    def train_batch(self, epoch):
 
         data = self.buf.get()
         normalize_returns = self.NORMALIZE_REWARDS

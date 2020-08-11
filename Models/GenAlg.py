@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 
-class GenAlg():
+class GenAlg(ABC):
 
     def __init__(self, frameskip, isLeftPlayer, obsIsImage):
         assert(frameskip > 0)
@@ -10,13 +10,13 @@ class GenAlg():
         self.obsIsImage = obsIsImage
 
     @abstractmethod
-    def get_action(self, X):
+    def get_action(self, obs, timestep, train_mode=True):
         pass
 
     def predict(self, X):
         raise NotImplementedError()
 
-    def train_batch(self, min_tsteps):
+    def train_batch(self, epoch):
         pass
 
     def save(self, save_dir):
@@ -24,3 +24,6 @@ class GenAlg():
 
     def load(self, save_path):
         raise NotImplementedError()
+
+    def end_tstep(self, reward, end_episode=False):
+        pass

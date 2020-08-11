@@ -7,12 +7,12 @@ class HardcodedOpponent(GenAlg, ABC):
     def __init__(self, isLeftPlayer, frameskip):
         super(HardcodedOpponent, self).__init__(frameskip=frameskip, isLeftPlayer=isLeftPlayer, obsIsImage=False)
 
-    def get_action(self, info):
-        if info is None:
+    def get_action(self, obs, timestep, train_mode=True):
+        if obs is None:
             return 0
 
-        ballPos = info['ballCenter']
-        playerPos = info['leftPlayerCenter'] if self.isLeftPlayer else info['rightPlayerCenter']
+        ballPos = obs['ballCenter']
+        playerPos = obs['leftPlayerCenter'] if self.isLeftPlayer else obs['rightPlayerCenter']
 
         if ballPos[1] < playerPos[1]:  # If ball is above paddle go up
             return 1
