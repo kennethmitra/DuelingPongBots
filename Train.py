@@ -146,7 +146,7 @@ if __name__ == '__main__':
 
     # Create Left Player
     LeftPlayer = ActorCritic(env=env, run_name="ActorCritic_vs_Hardcoded_FS1_EPE10", frameskip=1, isLeftPlayer=True)
-    L_start_epoch = LeftPlayer.load('./saves/ActorCritic_vs_hardcoded_FS1_EPE10-1/epo900.save', load_optim=True)
+    L_start_epoch = LeftPlayer.load('./saves/ActorCritic_vs_Hardcoded_FS1_EPE10-3/epo1200.save', load_optim=True)
 
     # Create Right Player
     RightPlayer = HardcodedOpponent(isLeftPlayer=False, frameskip=1)

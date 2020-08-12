@@ -45,15 +45,25 @@ class Buffer:
         return data
 
     def clear(self):
+        del self.tstep[:]
         self.tstep.clear()
+        del self.obs[:]
         self.obs.clear()
+        del self.act[:]
         self.act.clear()
+        del self.logp[:]
         self.logp.clear()
+        del self.val[:]
         self.val.clear()
+        del self.rew[:]
         self.rew.clear()
+        del self.entropy[:]
         self.entropy.clear()
+        del self.disc_rtg_rews[:]
         self.disc_rtg_rews.clear()
+        del self.per_episode_rews[:]
         self.per_episode_rews.clear()
+        del self.per_episode_length[:]
         self.per_episode_length.clear()
 
 

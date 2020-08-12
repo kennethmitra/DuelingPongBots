@@ -160,8 +160,6 @@ class ActorCritic(GenAlg):
         return action_dist, value
 
     def get_action(self, obs, timestep, train_mode=True):
-        #print("ts: ", timestep)
-        start_time = time.perf_counter()
         """
         Given an observation, predict action distribution and value and sample action
         Store log prob of sampled action, value calculated by critic, entropy of action prob dist
@@ -176,7 +174,6 @@ class ActorCritic(GenAlg):
             self.buf.record(timestep=timestep, obs=obs, act=action, logp=action_dist.log_prob(action), val=value,
                             entropy=entropy)
 
-        #print("Inference Time:", time.perf_counter() - start_time)
         return action.item()
 
 
@@ -204,6 +201,8 @@ class ActorCritic(GenAlg):
         for r in episode_rewards[::-1]:
             running_sum = r + gamma * running_sum
             returns.insert(0, running_sum)
+
+        del running_sum
         return returns
 
     def end_tstep(self, reward, end_episode=False):
@@ -243,6 +242,7 @@ class ActorCritic(GenAlg):
         values = torch.squeeze(torch.stack(data['val']))
 
         advantages = returns - values
+
 
         if normalize_advantages:
             advantages = (advantages - advantages.mean()) / advantages.std()
@@ -284,6 +284,28 @@ class ActorCritic(GenAlg):
                           update_time=(time.perf_counter() - update_start_time))
         # Log
         self.log.log_epoch(epoch, epoch_info)
-        # Clear buffer
+
+        # Delete contents of buffer
         self.buf.clear()
 
+        # Delete variables to save memory (Since python garbage collection is super sketch)
+        del epoch_info
+        del avg_ep_len
+        del avg_ep_raw_rew
+        del raw_rews
+        del epoch_timesteps
+        del num_episodes
+        del total_loss
+        del actor_loss
+        del critic_loss
+        del entropy_avg
+        del entropy_loss
+        del values
+        del returns
+        del advantages
+        del data
+        del normalize_returns
+        del normalize_advantages
+        del entropy_coeff
+        del clip_grad
+        del update_start_time
