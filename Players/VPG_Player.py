@@ -12,14 +12,14 @@ from Players.GenAlg import GenAlg
 
 
 class VPG_Player(GenAlg):
-    def __init__(self, env, run_name, frameskip, isLeftPlayer,model):
+    def __init__(self, env, run_name, frameskip, isLeftPlayer, model):
         """
         Construct neural network(s) for actor and critic
         :param obs_cnt: Number of components in an observation
         :param action_cnt: Number of possible actions
         """
 
-        super(VPG_Player, self).__init__(frameskip, isLeftPlayer, True)
+        super(VPG_Player, self).__init__(frameskip, isLeftPlayer)
         output_dim = env.action_space[0].n
 
         # Hyperparameters --------------------------
@@ -41,7 +41,6 @@ class VPG_Player(GenAlg):
         self.episode_rewards = []
 
         self.model = model
-
 
         print("-------------------------------GPU INFO--------------------------------------------")
         print('Available devices ', torch.cuda.device_count())
