@@ -133,3 +133,7 @@ dmypy.json
 
 #Pycharms
 .idea/
+
+# Ignore runs/ and saves/
+runs/
+saves/

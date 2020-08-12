@@ -15,7 +15,7 @@ class ActorCritic(GenAlg):
     class Model(torch.nn.Module):
         def __init__(self, output_dim,side_length):
             # Shared conv layers for feature extraction
-            super(Model, self).__init__()
+            super(ActorCritic.Model, self).__init__()
             f1 = 64
             w1 = 5
             f2 = 32
@@ -56,7 +56,6 @@ class ActorCritic(GenAlg):
             obs = F.relu(obs)
             obs = self.conv2(obs)
             obs = F.relu(obs)
-            print(obs.shape)
             obs = obs.view(-1, self.fc_size)
 
             # Actor Specific
@@ -99,13 +98,13 @@ class ActorCritic(GenAlg):
 
         self.episode_rewards = []
 
-        self.model = self.Model(output_dim=output_dim)
+        self.model = self.Model(output_dim=output_dim, side_length=32)
 
 
         print("-------------------------------GPU INFO--------------------------------------------")
         print('Available devices ', torch.cuda.device_count())
         self.model.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        self.model.device = "cpu"
+        # self.model.device = "cpu"
         print('Current cuda device ', self.model.device)
         if self.model.device != "cpu":
             print('Current CUDA device name ', torch.cuda.get_device_name(self.model.device))
@@ -161,23 +160,26 @@ class ActorCritic(GenAlg):
         return action_dist, value
 
     def get_action(self, obs, timestep, train_mode=True):
-        print("ts: ", timestep)
+        #print("ts: ", timestep)
+        start_time = time.perf_counter()
         """
         Given an observation, predict action distribution and value and sample action
         Store log prob of sampled action, value calculated by critic, entropy of action prob dist
         :param obs: observation from env.step() or env.reset()
         :return: sampled action
         """
-        # action_dist, value = self.predict(obs)
-        # action = action_dist.sample()
-        # entropy = action_dist.entropy()
-        #
-        # if train_mode:  # Buffer is only used in training
-        #     self.buf.record(timestep=timestep, obs=obs, act=action, logp=action_dist.log_prob(action), val=value,
-        #                     entropy=entropy)
-        #
-        # return action.item()
-        return 1
+        action_dist, value = self.predict(obs)
+        action = action_dist.sample()
+        entropy = action_dist.entropy()
+
+        if train_mode:  # Buffer is only used in training
+            self.buf.record(timestep=timestep, obs=obs, act=action, logp=action_dist.log_prob(action), val=value,
+                            entropy=entropy)
+
+        #print("Inference Time:", time.perf_counter() - start_time)
+        return action.item()
+
+
     def save(self, epoch):
         try:
             torch.save({'epoch': epoch,
@@ -284,104 +286,3 @@ class ActorCritic(GenAlg):
         self.log.log_epoch(epoch, epoch_info)
         # Clear buffer
         self.buf.clear()
-
-# if __name__ == '__main__':
-#     print("-------------------------------GPU INFO--------------------------------------------")
-#     print('Available devices ', torch.cuda.device_count())
-
-#     print('Current cuda device ', device)
-#     print('Current CUDA device name ', torch.cuda.get_device_name(device))
-#     print("-----------------------------------------------------------------------------------")
-
-
-#     TRAIN_MODE = False
-
-#     torch.manual_seed(SEED)
-#     env = gym.make(ENVIRONMENT)
-#     env.seed(SEED)
-
-#     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-#     model = ActorCritic (env = env, run_name=RUN_NAME)
-#     model.device = device
-#     model = model.to(model.device)
-
-#     model.optimizer = torch.optim.Adam(params=model.parameters(),lr = DEFAULT_LR)
-
-#     buf = Buffer()
-#     self.log = Logger(run_name=None, refresh_secs=30)
-
-#     # Load saved weights
-#     start_epoch = model.load("./saves/epo5350.save", load_optim=True)
-#     # Override epoch
-#     # start_epoch = 0
-
-#     self.log.log_hparams(ENVIRONMENT=ENVIRONMENT, SEED=SEED, model=model, ACTOR_LEARNING_RATE=ACTOR_LEARNING_RATE,
-#                     CRITIC_LEARNING_RATE=CRITIC_LEARNING_RATE, DISCOUNT_FACTOR=DISCOUNT_FACTOR,
-#                     ENTROPY_COEFF=ENTROPY_COEFF, activation_func=ACTIVATION_FUNC,
-#                     tsteps_per_epoch=TIMESTEPS_PER_EPOCH, normalize_rewards=NORMALIZE_REWARDS,
-#                     normalize_advantages=NORMALIZE_ADVANTAGES, clip_grad=CLIP_GRAD, notes=NOTES, display=True)
-
-#     # Setup env for first episode
-#     obs = env.reset()
-
-#     episode_rewards = []
-#     episode = 0
-#     epoch = 0
-
-#     # Iterate over epochs
-#     for epoch in range(start_epoch, NUM_EPOCHS):
-
-#         # Render first episode of every Nth epoch
-#         render = ((epoch % 1) == 0) or (not TRAIN_MODE)
-
-#         # Continue getting timestep data until reach TIMESTEPS_PER_EPOCH
-#         for timestep in count():
-
-#             # Get action prediction from model
-#             action, logprob, value, entropy = model.get_action(obs)
-
-#             # Perform action in environment and get new observation and rewards
-#             new_obs, reward, done, _ = env.step(action.item())
-
-#             # Store state-action information for updating model
-#             buf.record(timestep=timestep, obs=obs, act=action, logp=logprob, val=value, entropy=entropy, rew=reward)
-
-#             obs = new_obs
-#             if render: env.render()
-
-#             if done:
-#                 render = False
-
-#                 # Store discounted Rewards-To-Go™
-#                 ep_disc_rtg = model.discount_rewards_to_go(episode_rewards=episode_rewards, gamma=DISCOUNT_FACTOR)
-#                 buf.store_episode_stats(episode_rewards=episode_rewards, episode_disc_rtg_rews=ep_disc_rtg,
-#                                         episode_length=timestep)
-
-#                 # Initialize env after end of episode
-#                 obs = env.reset()
-#                 episode_rewards.clear()
-#                 episode += 1
-
-#                 if timestep >= TIMESTEPS_PER_EPOCH:
-#                     break
-#                 else:
-#                     print(f"episode: {episode}, timestep {timestep} of {TIMESTEPS_PER_EPOCH}")
-
-#         # Save model
-#         if epoch % 50 == 0:
-#             model.save(epoch=epoch)
-
-#         # Train model on epoch data
-#         if TRAIN_MODE:
-#             epoch_info = model.learn_from_experience(data=buf.get(), normalize_returns=NORMALIZE_REWARDS,
-#                                                      entropy_coeff=ENTROPY_COEFF, clip_grad=CLIP_GRAD)
-
-#             # Log epoch statistics
-#             log.log_epoch(epoch, epoch_info)
-
-#         # Clear buffer
-#         buf.clear()
-
-#     # After Training
-#     model.save(epoch=epoch)
-#     env.close()

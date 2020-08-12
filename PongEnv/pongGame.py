@@ -173,6 +173,7 @@ class Game:
         self.BG_COLOR = (0,0,0)
         self.canvas = pygame.display.set_mode([self.CANVAS_WIDTH, self.CANVAS_HEIGHT])
 
+
         self.allSprites = pygame.sprite.Group()
         self.playerSprites = pygame.sprite.Group()
         self.ball = pygame.sprite.Group()
@@ -188,12 +189,23 @@ class Game:
         self.Ball = Ball(color=(255,255,255), width=8, height=8, MAX_INITIAL_VEL=5, CANVAS_WIDTH=CANVAS_WIDTH, CANVAS_HEIGHT=CANVAS_HEIGHT)
         self.allSprites.add(self.Ball)
 
+        # Set min speed
+        self.BALL_MIN_X_SPEED = self.Ball.MAX_INITIAL_VEL / 3.0
+        self.BALL_MIN_Y_SPEED = self.Ball.MAX_INITIAL_VEL / 5.0
+
+        # Set max speed
+        self.BALL_MAX_X_SPEED = self.Ball.MAX_INITIAL_VEL * 2.5
+        self.BALL_MAX_Y_SPEED = self.Ball.MAX_INITIAL_VEL * 2.5
+
     def reset(self):
         # Call reset method of each player and ball
         for sprite in self.allSprites:
             sprite.reset(self.CANVAS_WIDTH, self.CANVAS_HEIGHT)
     
     def step(self, leftAction, rightAction):
+        # Clear event queue
+        pygame.event.pump()
+
         # Clear timestep rewards
         self.LeftPlayer.timestep_reward = 0
         self.RightPlayer.timestep_reward = 0
@@ -204,6 +216,7 @@ class Game:
         
         # Handle collisions
         playersHit = pygame.sprite.spritecollide(self.Ball, self.playerSprites, dokill=False)
+
 
         for player in playersHit:
             if len(playersHit) > 1:
@@ -230,7 +243,23 @@ class Game:
                                   (1 + 0.8*ball_vel_y_modifier) + player.velocityY
             self.Ball.velocityY = min(self.Ball.velocityY, self.Ball.MAX_INITIAL_VEL*1.5)
 
-        
+
+            self.Ball.velocityX += self.Ball.velocityX * random.uniform(-0.1, 0.1) / 15.0
+            self.Ball.velocityY += self.Ball.velocityY * random.uniform(-0.1, 0.1) / 15.0
+
+        # Enforce Speed minimum
+        self.Ball.velocityX = max(abs(self.Ball.velocityX), self.BALL_MIN_X_SPEED) * (
+            -1.0 if self.Ball.velocityX < 0 else 1.0)
+        self.Ball.velocityY = max(abs(self.Ball.velocityY), self.BALL_MIN_Y_SPEED) * (
+            -1.0 if self.Ball.velocityY < 0 else 1.0)
+
+        # Enfore Speed maximum
+        self.Ball.velocityX = min(abs(self.Ball.velocityX), self.BALL_MAX_X_SPEED) * (
+            -1.0 if self.Ball.velocityX < 0 else 1.0)
+        self.Ball.velocityY = max(abs(self.Ball.velocityY), self.BALL_MAX_Y_SPEED) * (
+            -1.0 if self.Ball.velocityY < 0 else 1.0)
+
+
         # Ball bounces off top and bottom walls
         self.Ball.confineVertical(self.TOP_WALL_Y, self.BOT_WALL_Y, flipVel=True)
 

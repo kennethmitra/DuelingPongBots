@@ -33,6 +33,7 @@ def test(LeftPlayer, RightPlayer, framerate=-1):
         frame += 1
         if done:
             frame = 0
+            print("---------Reseting environment---------")
             env.reset()
 
 
