@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-
+import torch
 
 class GenAlg(ABC):
 
@@ -8,6 +8,7 @@ class GenAlg(ABC):
         self.frameskip = frameskip
         self.isLeftPlayer = isLeftPlayer
         self.obsIsImage = obsIsImage
+
 
     @abstractmethod
     def get_action(self, obs, timestep, train_mode=True):
@@ -19,10 +20,10 @@ class GenAlg(ABC):
     def train_batch(self, epoch):
         pass
 
-    def save(self, save_dir):
+    def save(self, epoch):
         pass
 
-    def load(self, save_path):
+    def load(self, path, load_optim=True):
         raise NotImplementedError()
 
     def end_tstep(self, reward, end_episode=False):

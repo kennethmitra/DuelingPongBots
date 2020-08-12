@@ -100,7 +100,6 @@ class ActorCritic(GenAlg):
 
         self.model = self.Model(output_dim=output_dim, side_length=32)
 
-
         print("-------------------------------GPU INFO--------------------------------------------")
         print('Available devices ', torch.cuda.device_count())
         self.model.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
