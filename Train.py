@@ -6,7 +6,6 @@ from PongEnv import PongEnv
 from PIL import  Image
 import matplotlib.pyplot as plt
 import numpy as np
-from MemoryGrabber import MemoryGrabber
 
 def train(env, LeftPlayer, RightPlayer, framerate=-1, epochs=10, episodes_per_epoch=3):
     """
