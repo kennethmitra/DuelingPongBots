@@ -1,7 +1,7 @@
 from Models.HumanPlayer import HumanPlayer
 from Models.HardcodedOpponent import HardcodedOpponent
 from Models.GenAlg import GenAlg
-from Models.ActorCritic import ActorCritic
+from Models.VPG_Player import VPG
 from PongEnv import PongEnv
 from PIL import  Image
 import matplotlib.pyplot as plt
@@ -15,7 +15,7 @@ def train(env, LeftPlayer, RightPlayer, framerate=-1, epochs=10, episodes_per_ep
     Repeats previous action until a new action is obtained
     If framerate is -1, runs with unlimited framerate. If framerate is > 0
     """
-    #Modoulus that defines saving freq
+    #Modulus that defines saving freq
     obs = env.reset()
     SAVE_MOD = 50
     L_recorder = GIF_Recorder(LeftPlayer.save_path)
@@ -145,8 +145,8 @@ if __name__ == '__main__':
     env = PongEnv(framerate=FRAME_RATE)
 
     # Create Left Player
-    LeftPlayer = ActorCritic(env=env, run_name="ActorCritic_vs_Hardcoded_FS1_EPE10", frameskip=1, isLeftPlayer=True)
-    L_start_epoch = LeftPlayer.load('./saves/ActorCritic_vs_Hardcoded_FS1_EPE10-3/epo1200.save', load_optim=True)
+    LeftPlayer = VPG(env=env, run_name="ActorCritic_vs_Hardcoded_FS1_EPE10", frameskip=1, isLeftPlayer=True)
+    # L_start_epoch = LeftPlayer.load('./saves/ActorCritic_vs_Hardcoded_FS1_EPE10-3/epo1200.save', load_optim=True)
 
     # Create Right Player
     RightPlayer = HardcodedOpponent(isLeftPlayer=False, frameskip=1)
