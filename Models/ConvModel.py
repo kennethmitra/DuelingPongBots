@@ -6,6 +6,10 @@ class ConvModel(torch.nn.Module):
     def __init__(self, output_dim, side_length):
         # Shared conv layers for feature extraction
         super(ConvModel, self).__init__()
+
+        # Note input type for Train.py
+        self.obsIsImage = True
+
         f1 = 64
         w1 = 5
         f2 = 32

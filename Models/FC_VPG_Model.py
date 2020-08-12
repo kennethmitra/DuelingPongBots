@@ -9,6 +9,9 @@ class FC_VPG_MODEL(torch.nn.Module):
         # Shared conv layers for feature extraction
         super(FC_VPG_MODEL, self).__init__()
 
+        # Note input type for Train.py
+        self.obsIsImage = False
+
         # Actor Specific
         self.actor_layer1 = torch.nn.Linear(6, 12)
         self.actor_layer2 = torch.nn.Linear(12, output_dim)

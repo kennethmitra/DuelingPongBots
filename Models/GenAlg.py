@@ -3,11 +3,10 @@ import torch
 
 class GenAlg(ABC):
 
-    def __init__(self, frameskip, isLeftPlayer, obsIsImage):
+    def __init__(self, frameskip, isLeftPlayer):
         assert(frameskip > 0)
         self.frameskip = frameskip
         self.isLeftPlayer = isLeftPlayer
-        self.obsIsImage = obsIsImage
 
 
     @abstractmethod

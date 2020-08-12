@@ -1,7 +1,7 @@
 from Models.HumanPlayer import HumanPlayer
 from Models.HardcodedOpponent import HardcodedOpponent
 from Models.GenAlg import GenAlg
-from Models.VPG_Player import VPG
+from Models.VPG_Player import VPG_Player
 from PongEnv import PongEnv
 from PIL import  Image
 import matplotlib.pyplot as plt
@@ -63,7 +63,7 @@ def train(env, LeftPlayer, RightPlayer, framerate=-1, epochs=10, episodes_per_ep
 
                 # Downsample obs if needed
                 L_obs = None
-                if LeftPlayer.obsIsImage:
+                if LeftPlayer.model.obsIsImage:
                     L_obs = Image.fromarray(obs[0])
                     L_obs = L_obs.resize((32, 32), resample=Image.LANCZOS)
                     #plt.imshow(L_obs)
@@ -87,7 +87,7 @@ def train(env, LeftPlayer, RightPlayer, framerate=-1, epochs=10, episodes_per_ep
 
                 # Downsample obs if needed
                 R_obs = None
-                if RightPlayer.obsIsImage:
+                if RightPlayer.model.obsIsImage:
                     R_obs = Image.fromarray(obs[0])
                     R_obs = R_obs.resize((32, 32), resample=Image.LANCZOS)
                     R_obs = np.asarray(R_obs)
