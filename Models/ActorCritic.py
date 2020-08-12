@@ -16,7 +16,7 @@ class ActorCritic(GenAlg):
     class Model(torch.nn.Module):
         def __init__(self, output_dim):
             # Shared conv layers for feature extraction
-            super(Model, self).__init__()
+            super(ActorCritic.Model, self).__init__()
             f1 = 64
             self.conv1 = torch.nn.Conv2d(1, f1, 5)
             self.max_pool = torch.nn.MaxPool2d(2)
@@ -142,6 +142,7 @@ class ActorCritic(GenAlg):
         Path(f'./saves/{run_name}').mkdir(parents=True, exist_ok=True)
         self.save_path = f'./saves/{run_name}'
 
+        print("Num params:", sum(p.numel() for p in self.model.parameters()))
     def predict(self, obs):
         """
         Compute action distribution and value from an observation
@@ -166,16 +167,16 @@ class ActorCritic(GenAlg):
         :param obs: observation from env.step() or env.reset()
         :return: sampled action
         """
-        action_dist, value = self.predict(obs)
-        action = action_dist.sample()
-        entropy = action_dist.entropy()
-
-        if train_mode:  # Buffer is only used in training
-            self.buf.record(timestep=timestep, obs=obs, act=action, logp=action_dist.log_prob(action), val=value,
-                            entropy=entropy)
-
-        return action.item()
-
+        # action_dist, value = self.predict(obs)
+        # action = action_dist.sample()
+        # entropy = action_dist.entropy()
+        #
+        # if train_mode:  # Buffer is only used in training
+        #     self.buf.record(timestep=timestep, obs=obs, act=action, logp=action_dist.log_prob(action), val=value,
+        #                     entropy=entropy)
+        #
+        # return action.item()
+        return 1
     def save(self, epoch):
         try:
             torch.save({'epoch': epoch,
@@ -279,7 +280,7 @@ class ActorCritic(GenAlg):
                           pred_values=data['val'], disc_rews=returns, raw_rew=raw_rews,
                           update_time=(time.perf_counter() - update_start_time))
         # Log
-        self.log(epoch, epoch_info)
+        self.log.log_epoch(epoch, epoch_info)
         # Clear buffer
         self.buf.clear()
 

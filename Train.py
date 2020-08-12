@@ -3,6 +3,9 @@ from Models.HardcodedOpponent import HardcodedOpponent
 from Models.GenAlg import GenAlg
 from Models.ActorCritic import ActorCritic
 from PongEnv import PongEnv
+from PIL import  Image
+import matplotlib.pyplot as plt
+import numpy as np
 from MemoryGrabber import MemoryGrabber
 
 def train(env, LeftPlayer, RightPlayer, framerate=-1, epochs=10, episodes_per_epoch=3):
@@ -43,13 +46,36 @@ def train(env, LeftPlayer, RightPlayer, framerate=-1, epochs=10, episodes_per_ep
                     # Store timestep
                     if frame != 0:
                         LeftPlayer.end_tstep(reward=L_reward)  # Store reward for last timestep
-                    L_action = LeftPlayer.get_action(obs[0 if LeftPlayer.obsIsImage else 1], timestep=L_timestep, train_mode=True) # get_action stores obs, logprobs, and any other intermediary stuff
+
+                    # Downsample obs if needed
+                    L_obs = None
+                    if LeftPlayer.obsIsImage:
+                        L_obs = Image.fromarray(obs[0])
+                        L_obs = L_obs.resize((32, 32), resample=Image.LANCZOS)
+                        plt.imshow(L_obs)
+                        plt.pause(0.001)
+                        L_obs = np.asarray(L_obs)
+                    else:
+                        L_obs = obs[1]
+
+                    # Get new action
+                    L_action = LeftPlayer.get_action(L_obs, timestep=L_timestep, train_mode=True) # get_action stores obs, logprobs, and any other intermediary stuff
                     L_timestep += 1
                 if frame % RightPlayer.frameskip == 0:
                     # Store timestep
                     if frame != 0:
                         RightPlayer.end_tstep(reward=R_reward)
-                    R_action = RightPlayer.get_action(obs[0 if RightPlayer.obsIsImage else 1], timestep=R_timestep, train_mode=True)
+
+                    # Downsample obs if needed
+                    R_obs = None
+                    if RightPlayer.obsIsImage:
+                        R_obs = Image.fromarray(obs[0])
+                        R_obs = R_obs.resize((32, 32), resample=Image.LANCZOS)
+                        R_obs = np.asarray(R_obs)
+                    else:
+                        R_obs = obs[1]
+
+                    R_action = RightPlayer.get_action(R_obs, timestep=R_timestep, train_mode=True)
                     R_timestep += 1
 
                 # Perform actions

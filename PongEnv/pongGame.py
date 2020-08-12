@@ -185,7 +185,7 @@ class Game:
         self.playerSprites.add(self.LeftPlayer)
         self.playerSprites.add(self.RightPlayer)
         # Create ball
-        self.Ball = Ball(color=(255,255,255), width=7, height=7, MAX_INITIAL_VEL=5, CANVAS_WIDTH=CANVAS_WIDTH, CANVAS_HEIGHT=CANVAS_HEIGHT)
+        self.Ball = Ball(color=(255,255,255), width=8, height=8, MAX_INITIAL_VEL=5, CANVAS_WIDTH=CANVAS_WIDTH, CANVAS_HEIGHT=CANVAS_HEIGHT)
         self.allSprites.add(self.Ball)
 
     def reset(self):
