@@ -2,14 +2,13 @@ import torch
 import torch.nn.functional as F
 from torch.distributions.categorical import Categorical
 from itertools import count
-import gym
-from Buffer import Buffer
-from Logger import Logger
+from Players.Buffer import Buffer
+from Players.Logger import Logger
 import os
 from pathlib import Path
 import numpy as np
 import time
-from GenAlg import GenAlg
+from Players.GenAlg import GenAlg
 
 
 class VPG_Player(GenAlg):

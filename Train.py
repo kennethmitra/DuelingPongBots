@@ -1,10 +1,7 @@
-from Models.HumanPlayer import HumanPlayer
-from Models.HardcodedOpponent import HardcodedOpponent
-from Models.GenAlg import GenAlg
-from Models.VPG_Player import VPG
+from Players.HardcodedOpponent import HardcodedOpponent
+from Players.VPG_Player import VPG
 from PongEnv import PongEnv
 from PIL import  Image
-import matplotlib.pyplot as plt
 import numpy as np
 import time
 from utils.GIF_Recorder import GIF_Recorder

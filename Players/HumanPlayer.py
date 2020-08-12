@@ -1,7 +1,5 @@
-from abc import ABC
-
 import keyboard
-from GenAlg import *
+from Players.GenAlg import *
 
 
 class HumanPlayer(GenAlg, ABC):

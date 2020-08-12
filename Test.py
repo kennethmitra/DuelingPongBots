@@ -1,6 +1,5 @@
-from Models.HumanPlayer import HumanPlayer
-from Models.HardcodedOpponent import HardcodedOpponent
-from Models.GenAlg import GenAlg
+from Players.HumanPlayer import HumanPlayer
+from Players.HardcodedOpponent import HardcodedOpponent
 from PongEnv import PongEnv
 
 

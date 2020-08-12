@@ -1,6 +1,6 @@
 from abc import ABC
 
-from GenAlg import GenAlg
+from Players.GenAlg import GenAlg
 
 
 class HardcodedOpponent(GenAlg, ABC):
