@@ -179,8 +179,8 @@ class Game:
         self.ball = pygame.sprite.Group()
 
         # Create both players
-        self.LeftPlayer = Player(color=(255,80,80), width=10, height=50, speed=2.5, isLeftPaddle=True, EDGE_OFFSET=self.EDGE_OFFSET, CANVAS_WIDTH=self.CANVAS_WIDTH, CANVAS_HEIGHT=self.CANVAS_HEIGHT)
-        self.RightPlayer = Player(color=(80,80,255), width=10, height=50, speed=2.5, isLeftPaddle=False, EDGE_OFFSET=self.EDGE_OFFSET, CANVAS_WIDTH=self.CANVAS_WIDTH, CANVAS_HEIGHT=self.CANVAS_HEIGHT)
+        self.LeftPlayer = Player(color=(255,80,80), width=10, height=50, speed=5.0, isLeftPaddle=True, EDGE_OFFSET=self.EDGE_OFFSET, CANVAS_WIDTH=self.CANVAS_WIDTH, CANVAS_HEIGHT=self.CANVAS_HEIGHT)
+        self.RightPlayer = Player(color=(80,80,255), width=10, height=50, speed=5.0, isLeftPaddle=False, EDGE_OFFSET=self.EDGE_OFFSET, CANVAS_WIDTH=self.CANVAS_WIDTH, CANVAS_HEIGHT=self.CANVAS_HEIGHT)
         self.allSprites.add(self.LeftPlayer)
         self.allSprites.add(self.RightPlayer)
         self.playerSprites.add(self.LeftPlayer)
@@ -270,17 +270,19 @@ class Game:
 
         # Check if point is scored
         done = False
-        if(self.Ball.rect.right > self.RightPlayer.rect.right):
+        if(self.Ball.rect.right > self.RightPlayer.rect.right): # Left player wins
             self.RightPlayer.score -= 1
             self.LeftPlayer.score += 1
             self.RightPlayer.timestep_reward = -1
-            self.LeftPlayer.timestep_reward = -1
+            self.LeftPlayer.timestep_reward = 1
             done = True
-        if(self.Ball.rect.left < self.LeftPlayer.rect.left) :
+            print("Left Player wins!")
+        if(self.Ball.rect.left < self.LeftPlayer.rect.left) : # Right player wins
             self.LeftPlayer.score -= 1
             self.RightPlayer.score += 1
             self.LeftPlayer.timestep_reward = -1
             self.RightPlayer.timestep_reward = 1
+            print("Right Player wins!")
             done = True
 
         # Apply velocities

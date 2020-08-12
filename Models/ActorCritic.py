@@ -92,8 +92,8 @@ class ActorCritic(GenAlg):
         self.NORMALIZE_ADVANTAGES = True
         self.CLIP_GRAD = False
         self.NUM_PROCESSES = 1
-        self.RUN_NAME = "Pong-A2C"
-        self.NOTES = ""
+        self.RUN_NAME = run_name
+        self.NOTES = "Episodes per epoch is now 10"
         # -----------------------------------------
 
         self.episode_rewards = []
@@ -286,3 +286,4 @@ class ActorCritic(GenAlg):
         self.log.log_epoch(epoch, epoch_info)
         # Clear buffer
         self.buf.clear()
+
