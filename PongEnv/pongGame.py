@@ -162,7 +162,15 @@ class Ball(EnhancedSprite):
 
 class Game:
 
-    def __init__(self, CANVAS_WIDTH, CANVAS_HEIGHT, framerate):
+    def __init__(self, CANVAS_WIDTH, CANVAS_HEIGHT, framerate, player_speeds=(5.0, 5.0), ball_max_initial_speed=5.0):
+        """
+        Initialize a Game object
+        :param CANVAS_WIDTH: Width in pixels of game window (int)
+        :param CANVAS_HEIGHT: Height in pixels of game window (int)
+        :param framerate: Value to limit framerate to. Unlimited FPS if set to -1 (int)
+        :param player_speeds: Tuple (Left Player speed, Right Player speed) movement speed of paddles (float)
+        :param ball_max_initial_speed: Ball's initial velocity in x and y directions upon reset is ~Uniform(-value, value)
+        """
         self.CANVAS_WIDTH = CANVAS_WIDTH
         self.CANVAS_HEIGHT = CANVAS_HEIGHT
         self.framerate = framerate
@@ -173,20 +181,19 @@ class Game:
         self.BG_COLOR = (0,0,0)
         self.canvas = pygame.display.set_mode([self.CANVAS_WIDTH, self.CANVAS_HEIGHT])
 
-
         self.allSprites = pygame.sprite.Group()
         self.playerSprites = pygame.sprite.Group()
         self.ball = pygame.sprite.Group()
 
         # Create both players
-        self.LeftPlayer = Player(color=(255,80,80), width=10, height=50, speed=5.0, isLeftPaddle=True, EDGE_OFFSET=self.EDGE_OFFSET, CANVAS_WIDTH=self.CANVAS_WIDTH, CANVAS_HEIGHT=self.CANVAS_HEIGHT)
-        self.RightPlayer = Player(color=(80,80,255), width=10, height=50, speed=5.0, isLeftPaddle=False, EDGE_OFFSET=self.EDGE_OFFSET, CANVAS_WIDTH=self.CANVAS_WIDTH, CANVAS_HEIGHT=self.CANVAS_HEIGHT)
+        self.LeftPlayer = Player(color=(255,80,80), width=10, height=50, speed=player_speeds[0], isLeftPaddle=True, EDGE_OFFSET=self.EDGE_OFFSET, CANVAS_WIDTH=self.CANVAS_WIDTH, CANVAS_HEIGHT=self.CANVAS_HEIGHT)
+        self.RightPlayer = Player(color=(80,80,255), width=10, height=50, speed=player_speeds[1], isLeftPaddle=False, EDGE_OFFSET=self.EDGE_OFFSET, CANVAS_WIDTH=self.CANVAS_WIDTH, CANVAS_HEIGHT=self.CANVAS_HEIGHT)
         self.allSprites.add(self.LeftPlayer)
         self.allSprites.add(self.RightPlayer)
         self.playerSprites.add(self.LeftPlayer)
         self.playerSprites.add(self.RightPlayer)
         # Create ball
-        self.Ball = Ball(color=(255,255,255), width=8, height=8, MAX_INITIAL_VEL=5, CANVAS_WIDTH=CANVAS_WIDTH, CANVAS_HEIGHT=CANVAS_HEIGHT)
+        self.Ball = Ball(color=(255,255,255), width=8, height=8, MAX_INITIAL_VEL=ball_max_initial_speed, CANVAS_WIDTH=CANVAS_WIDTH, CANVAS_HEIGHT=CANVAS_HEIGHT)
         self.allSprites.add(self.Ball)
 
         # Set min speed

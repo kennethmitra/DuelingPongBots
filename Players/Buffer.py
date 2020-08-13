@@ -27,9 +27,9 @@ class Buffer:
         if rew is not None: self.rew.append(rew)
         if entropy is not None: self.entropy.append(entropy)
 
-    def store_episode_stats(self, episode_disc_rtg_rews):
+    def store_episode_stats(self, episode_rews, episode_disc_rtg_rews):
 
-        self.per_episode_rews.append(torch.tensor(self.rew, requires_grad=False).sum().item())
+        self.per_episode_rews.append(torch.tensor(episode_rews, requires_grad=False).sum().item())
         self.disc_rtg_rews.extend(episode_disc_rtg_rews)
         self.per_episode_length.append(len(self.tstep))
 

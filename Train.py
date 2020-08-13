@@ -37,20 +37,11 @@ def train(env, LeftPlayer, RightPlayer, framerate=-1, epochs=10, episodes_per_ep
         frame = 0
         episode = 0
 
-
-        last_time = time.perf_counter()
-
-        last_obs = None
-
         print(f"============Epoch {epoch} out of {epochs}============")
         episode_counter = 0
 
         # Get epoch data
         while episode_counter < episodes_per_epoch:
-
-            curTime = time.perf_counter()
-            #print("Frame Time: ", curTime - last_time)
-            last_time = curTime
 
             # Get action from models if needed
             if frame % LeftPlayer.frameskip == 0:
@@ -121,6 +112,8 @@ def train(env, LeftPlayer, RightPlayer, framerate=-1, epochs=10, episodes_per_ep
             if done:
                 LeftPlayer.end_tstep(reward=L_reward, end_episode=True) # Store reward for last timestep
                 RightPlayer.end_tstep(reward=R_reward, end_episode=True)
+                L_reward = 0
+                R_reward = 0
                 episode += 1
                 episode_counter += 1
                 print(f"---------Episode {episode_counter} out of {episodes_per_epoch} in epoch {epoch} out of {epochs}---------")

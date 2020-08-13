@@ -156,7 +156,7 @@ class VPG_Player(GenAlg):
             # Calculate discounted rewards to go
             ep_disc_rtg = self.discount_rewards_to_go(episode_rewards=self.episode_rewards, gamma=self.DISCOUNT_FACTOR)
             # End episode in buffer
-            self.buf.store_episode_stats(episode_disc_rtg_rews=ep_disc_rtg)
+            self.buf.store_episode_stats(episode_rews=self.episode_rewards, episode_disc_rtg_rews=ep_disc_rtg)
             self.episode_rewards.clear()
 
     def train_batch(self, epoch):
