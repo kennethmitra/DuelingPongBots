@@ -1,8 +1,5 @@
-from typing import Any
-
 import torch
 import numpy as np
-
 
 class FC_VPG_MODEL(torch.nn.Module):
     def __init__(self, output_dim, side_length):
