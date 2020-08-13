@@ -3,7 +3,8 @@ import torch
 from Logger import Logger
 from Buffer import Buffer
 from torch.distributions import Categorical
-import torch.nn.functional as F
+from itertools import count
+from pathlib import Path
 import time
 
 class VPG_Player(GenAlg):
@@ -25,7 +26,7 @@ class VPG_Player(GenAlg):
         self.ENTROPY_COEFF = 0.0
         self.TIMESTEPS_PER_EPOCH = 10000
         self.ACTIVATION_FUNC = torch.relu
-        self.NORMALIZE_REWARDS = False
+        self.NORMALIZE_RETURNS = False
         self.NORMALIZE_ADVANTAGES = False
         self.CLIP_GRAD = False
         self.NUM_PROCESSES = 1
@@ -58,11 +59,22 @@ class VPG_Player(GenAlg):
                              ENTROPY_COEFF=self.ENTROPY_COEFF,
                              activation_func=self.ACTIVATION_FUNC,
                              tsteps_per_epoch=self.TIMESTEPS_PER_EPOCH,
-                             normalize_rewards=self.NORMALIZE_REWARDS,
-                             normalize_advantages=self.NORMALIZE_ADVANTAGES,
+                             normalize_returns=self.NORMALIZE_RETURNS,
                              clip_grad=self.CLIP_GRAD, notes=self.NOTES, display=True)
 
         self.buf = Buffer()
+
+        # Choose save directory
+        if run_name is None:
+            run_name = Path(__file__).stem
+
+        # Ex) If run_name is "dog", and dog-1, dog-2 are taken, save at dog-3
+        for i in count():
+            if not os.path.exists(f'./saves/{run_name}-{i}'):
+                run_name = f'{run_name}-{i}'
+                break
+        Path(f'./saves/{run_name}').mkdir(parents=True, exist_ok=True)
+        self.save_path = f'./saves/{run_name}'
 
     def get_action(self, obs, timestep, train_mode=True):
         action_dist = self.predict(obs)
@@ -129,17 +141,11 @@ class VPG_Player(GenAlg):
     def train_batch(self, epoch):
         print("Training epoch", epoch)
         data = self.buf.get()
-        normalize_returns = self.NORMALIZE_REWARDS
-        normalize_advantages = self.NORMALIZE_ADVANTAGES
+        normalize_returns = self.NORMALIZE_RETURNS
         entropy_coeff = self.ENTROPY_COEFF
         clip_grad = self.CLIP_GRAD
 
         update_start_time = time.perf_counter()
-
-        # Sanity Check
-        assert len(data['tstep']) == len(data['obs']) == len(data['act']) == len(data['logp']) == len(data['val']) \
-               == len(data['rew']) == len(data['entropy']) == len(data['disc_rtg_rews']) == len(data['disc_rtg_rews'])
-        assert len(data['per_episode_rews']) == len(data['per_episode_length'])
 
         # Don't need to backprop through returns
         returns = torch.tensor(data['disc_rtg_rews']).to(self.model.device)
@@ -177,10 +183,10 @@ class VPG_Player(GenAlg):
         num_episodes = len(data['per_episode_length'])
 
         # Package logging info
-        epoch_info = dict(actor_loss=actor_loss, critic_loss=critic_loss, entropy_loss=entropy_loss,
+        epoch_info = dict(actor_loss=actor_loss, entropy_loss=entropy_loss,
                           entropy_avg=entropy_avg,
                           total_loss=total_loss, avg_ep_len=avg_ep_len, avg_ep_raw_rew=avg_ep_raw_rew,
-                          epoch_timesteps=epoch_timesteps, num_episodes=num_episodes, advantages=advantages,
+                          epoch_timesteps=epoch_timesteps, num_episodes=num_episodes,
                           pred_values=data['val'], disc_rews=returns, raw_rew=raw_rews,
                           update_time=(time.perf_counter() - update_start_time),
                           avg_ep_disc_rew=avg_ep_disc_rew)
@@ -200,15 +206,11 @@ class VPG_Player(GenAlg):
         del num_episodes
         del total_loss
         del actor_loss
-        del critic_loss
         del entropy_avg
         del entropy_loss
-        del values
         del returns
-        del advantages
         del data
         del normalize_returns
-        del normalize_advantages
         del entropy_coeff
         del clip_grad
         del update_start_time

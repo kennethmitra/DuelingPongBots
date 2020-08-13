@@ -30,7 +30,7 @@ class ActorCritic_Player(GenAlg):
         self.ENTROPY_COEFF = 0.0
         self.TIMESTEPS_PER_EPOCH = 10000
         self.ACTIVATION_FUNC = torch.relu
-        self.NORMALIZE_REWARDS = False
+        self.NORMALIZE_RETURNS = False
         self.NORMALIZE_ADVANTAGES = True
         self.CLIP_GRAD = False
         self.NUM_PROCESSES = 1
@@ -65,13 +65,13 @@ class ActorCritic_Player(GenAlg):
                              ENTROPY_COEFF=self.ENTROPY_COEFF,
                              activation_func=self.ACTIVATION_FUNC,
                              tsteps_per_epoch=self.TIMESTEPS_PER_EPOCH,
-                             normalize_rewards=self.NORMALIZE_REWARDS,
+                             normalize_returns=self.NORMALIZE_RETURNS,
                              normalize_advantages=self.NORMALIZE_ADVANTAGES,
                              clip_grad=self.CLIP_GRAD, notes=self.NOTES, display=True)
 
         self.buf = Buffer()
 
-
+        # Choose save directory
         if run_name is None:
             run_name = Path(__file__).stem
 
@@ -162,7 +162,7 @@ class ActorCritic_Player(GenAlg):
     def train_batch(self, epoch):
         print("Training epoch", epoch)
         data = self.buf.get()
-        normalize_returns = self.NORMALIZE_REWARDS
+        normalize_returns = self.NORMALIZE_RETURNS
         normalize_advantages = self.NORMALIZE_ADVANTAGES
         entropy_coeff = self.ENTROPY_COEFF
         clip_grad = self.CLIP_GRAD

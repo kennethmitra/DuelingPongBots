@@ -11,7 +11,7 @@ class Logger:
         self.loggedModel=False
 
     def log_hparams(self, ENVIRONMENT=None, SEED=None, model=None, optimizer=None, LEARNING_RATE=None, DISCOUNT_FACTOR=None, ENTROPY_COEFF=None, activation_func=None,
-                    tsteps_per_epoch=None, normalize_rewards=None, normalize_advantages=None, clip_grad=None, notes=None, display=True):
+                    tsteps_per_epoch=None, normalize_returns=None, normalize_advantages=None, clip_grad=None, notes=None, display=True):
         self.writer.add_text("Hyperparams/Environment", ENVIRONMENT, 0)
         self.writer.add_text("Hyperparams/Seed", str(SEED), 0)
         self.writer.add_text("Hyperparams/Model", str(model), 0)
@@ -21,7 +21,7 @@ class Logger:
         self.writer.add_text("Hyperparams/Entropy_coefficient", str(ENTROPY_COEFF), 0)
         self.writer.add_text("Hyperparams/Activation_Function", str(activation_func), 0)
         self.writer.add_text("Hyperparams/Timesteps_per_epoch", str(tsteps_per_epoch), 0)
-        self.writer.add_text("Hyperparams/Normalize_rewards", str(normalize_rewards), 0)
+        self.writer.add_text("Hyperparams/Normalize_rewards", str(normalize_returns), 0)
         self.writer.add_text("Hyperparams/Normalize_advantages", str(normalize_advantages), 0)
         self.writer.add_text("Hyperparams/clip_grad", str(clip_grad), 0)
         self.writer.add_text("Hyperparams/Notes", notes, 0)
@@ -38,7 +38,7 @@ class Logger:
             print(f'DISCOUNT_FACTOR: {DISCOUNT_FACTOR}')
             print(f'ENTROPY_COEFF: {ENTROPY_COEFF}')
             print(f'ACTIVATION_FUNC: {activation_func}')
-            print(f'NORMALIZE_REWARDS: {normalize_rewards}')
+            print(f'NORMALIZE_REWARDS: {normalize_returns}')
             print(f'NORMALIZE_ADVANTAGES: {normalize_advantages}')
             print(f'CLIP_GRAD: {clip_grad}')
             print(f'NOTES: {notes}')
