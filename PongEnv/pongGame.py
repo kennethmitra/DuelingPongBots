@@ -354,8 +354,7 @@ class Game:
         :return: dict
         """
         info = {'ballCenter': self.Ball.rect.center,
-                'ball_vel_x': self.Ball.velocityX,
-                'ball_vel_y': self.Ball.velocityY,
+                'ball_vel': (self.Ball.velocityX, self.Ball.velocityY),
                 'leftPlayerCenter': self.LeftPlayer.rect.center,
                 'rightPlayerCenter': self.RightPlayer.rect.center}
         return info
