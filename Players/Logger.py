@@ -10,8 +10,8 @@ class Logger:
         self.last_episode_time = time.perf_counter()
         self.loggedModel=False
 
-    def log_hparams(self, ENVIRONMENT, SEED, model, optimizer, LEARNING_RATE, DISCOUNT_FACTOR, ENTROPY_COEFF, activation_func,
-                    tsteps_per_epoch, normalize_rewards, normalize_advantages, clip_grad, notes, display=True):
+    def log_hparams(self, ENVIRONMENT=None, SEED=None, model=None, optimizer=None, LEARNING_RATE=None, DISCOUNT_FACTOR=None, ENTROPY_COEFF=None, activation_func=None,
+                    tsteps_per_epoch=None, normalize_rewards=None, normalize_advantages=None, clip_grad=None, notes=None, display=True):
         self.writer.add_text("Hyperparams/Environment", ENVIRONMENT, 0)
         self.writer.add_text("Hyperparams/Seed", str(SEED), 0)
         self.writer.add_text("Hyperparams/Model", str(model), 0)
@@ -45,27 +45,44 @@ class Logger:
             print('-----------------------------------------------------------------------------------------------')
 
     def log_epoch(self, epoch_no, epoch_info):
-        self.writer.add_scalar("Loss/Actor_Loss", epoch_info['actor_loss'], epoch_no)
-        self.writer.add_scalar("Loss/Critic_Loss", epoch_info['critic_loss'], epoch_no)
-        self.writer.add_scalar("Loss/Entropy_Loss", epoch_info['entropy_loss'], epoch_no)
-        self.writer.add_scalar("Loss/Entropy", epoch_info['entropy_avg'], epoch_no)
-        self.writer.add_scalar("Loss/Total_Loss", epoch_info['total_loss'], epoch_no)
 
-        self.writer.add_histogram("Train/disc_rews", epoch_info['disc_rews'], epoch_no)
-        self.writer.add_histogram("Train/pred_values", torch.stack(epoch_info['pred_values']), epoch_no)
-        self.writer.add_histogram("Train/Advantages", epoch_info['advantages'], epoch_no)
-        self.writer.add_histogram("Train/Raw_Rewards", epoch_info['raw_rew'], epoch_no)
+        if 'actor_loss' in epoch_info:
+            self.writer.add_scalar("Loss/Actor_Loss", epoch_info['actor_loss'], epoch_no)
+        if 'critic_loss' in epoch_info:
+            self.writer.add_scalar("Loss/Critic_Loss", epoch_info['critic_loss'], epoch_no)
+        if 'entropy_loss' in epoch_info:
+            self.writer.add_scalar("Loss/Entropy_Loss", epoch_info['entropy_loss'], epoch_no)
+        if 'entropy_avg' in epoch_info:
+            self.writer.add_scalar("Loss/Entropy", epoch_info['entropy_avg'], epoch_no)
+        if 'total_loss' in epoch_info:
+            self.writer.add_scalar("Loss/Total_Loss", epoch_info['total_loss'], epoch_no)
 
+        if 'disc_rews' in epoch_info:
+            self.writer.add_histogram("Train/disc_rews", epoch_info['disc_rews'], epoch_no)
+        if 'pred_values' in epoch_info:
+            self.writer.add_histogram("Train/pred_values", torch.stack(epoch_info['pred_values']), epoch_no)
+        if 'advantages' in epoch_info:
+            self.writer.add_histogram("Train/Advantages", epoch_info['advantages'], epoch_no)
+        if 'raw_rew' in epoch_info:
+            self.writer.add_histogram("Train/Raw_Rewards", epoch_info['raw_rew'], epoch_no)
 
+        if 'avg_ep_len' in epoch_info:
+            self.writer.add_scalar("Metrics/Episode_Length", epoch_info['avg_ep_len'], epoch_no)
+        if 'epoch_timesteps' in epoch_info:
+            self.writer.add_scalar("Metrics/Actual_Timesteps_per_Epoch", epoch_info['epoch_timesteps'], epoch_no)
+        if 'num_episodes' in epoch_info:
+            self.writer.add_scalar("Metrics/Episodes_per_Epoch", epoch_info['num_episodes'], epoch_no)
 
-        self.writer.add_scalar("Metrics/Episode_Length", epoch_info['avg_ep_len'], epoch_no)
-        self.writer.add_scalar("Metrics/Actual_Timesteps_per_Epoch", epoch_info['epoch_timesteps'], epoch_no)
-        self.writer.add_scalar("Metrics/Episodes_per_Epoch", epoch_info['num_episodes'], epoch_no)
+        if 'update_time' in epoch_info:
+            self.writer.add_scalar('Time/Update_Time', epoch_info['update_time'], epoch_no)
+        if 'avg_ep_raw_rew' in epoch_info:
+            self.writer.add_scalar('Metrics/Avg_Raw_Reward', epoch_info['avg_ep_raw_rew'], epoch_no)
+        if 'avg_ep_disc_rew' in epoch_info:
+            self.writer.add_scalar('Metrics/Avg_Disc_Reward', epoch_info['avg_ep_disc_rew'], epoch_no)
+
         elapsed_time = time.perf_counter() - self.last_episode_time
         self.writer.add_scalar('Time/Time_per_Epoch', elapsed_time, epoch_no)
-        self.writer.add_scalar('Time/Update_Time', epoch_info['update_time'], epoch_no)
-        self.writer.add_scalar('Metrics/Avg_Raw_Reward', epoch_info['avg_ep_raw_rew'], epoch_no)
-        self.writer.add_scalar('Metrics/Avg_Disc_Reward', epoch_info['avg_ep_disc_rew'], epoch_no)
         self.last_episode_time = time.perf_counter()
 
-        print(f"Epoch: {epoch_no}, Entropy: {epoch_info['entropy_avg']}, Raw Rew: {epoch_info['avg_ep_raw_rew']}, Disc Rew: {epoch_info['avg_ep_disc_rew']}, Time: {elapsed_time}")
+        print(f"Epoch: {epoch_no}, Entropy: {epoch_info['entropy_avg'] if ('entropy_avg' in epoch_info) else 'NA'}, Raw Rew: {epoch_info['avg_ep_raw_rew'] if ('avg_ep_raw_rew' in epoch_info) else 'NA'}, "
+              f"Disc Rew: {epoch_info['avg_ep_disc_rew'] if ('avg_ep_disc_rew' in epoch_info) else 'NA'}, Time: {elapsed_time}")

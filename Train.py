@@ -5,7 +5,7 @@ from PIL import Image
 import numpy as np
 import time
 from utils.GIF_Recorder import GIF_Recorder
-from Models.FC_VPG_Model import FC_VPG_Model
+from Models.FC_ActorCritic_Model import FC_ActorCritic_Model
 from Models.Dummy_Model import DummyModel
 def train(env, LeftPlayer, RightPlayer, framerate=-1, epochs=10, episodes_per_epoch=3, L_start_epoch=0, R_start_epoch=0):
     """
@@ -138,7 +138,7 @@ if __name__ == '__main__':
     env = PongEnv(framerate=FRAME_RATE)
 
     # Create Left Player
-    LeftPlayer = ActorCritic_Player(env=env, run_name="ActorCritic_vs_Hardcoded_Simple_FS1_EPE50", frameskip=1, isLeftPlayer=True, model=FC_VPG_Model(8, env.action_space[0].n))
+    LeftPlayer = ActorCritic_Player(env=env, run_name="ActorCritic_vs_Hardcoded_Simple_FS1_EPE50", frameskip=1, isLeftPlayer=True, model=FC_ActorCritic_Model(8, env.action_space[0].n))
     # L_start_epoch = LeftPlayer.load('./saves/ActorCritic_vs_Hardcoded_FS1_EPE10-3/epo1200.save', load_optim=True)
 
     # Create Right Player

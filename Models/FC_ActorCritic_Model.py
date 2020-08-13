@@ -1,10 +1,10 @@
 import torch
 import numpy as np
 
-class FC_VPG_Model(torch.nn.Module):
+class FC_ActorCritic_Model(torch.nn.Module):
     def __init__(self, input_dim, output_dim):
         # Shared conv layers for feature extraction
-        super(FC_VPG_Model, self).__init__()
+        super(FC_ActorCritic_Model, self).__init__()
 
         # Note input type for Train.py
         self.obsIsImage = False
