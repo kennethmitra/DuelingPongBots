@@ -4,8 +4,9 @@ from Players.GenAlg import GenAlg
 
 
 class HardcodedOpponent(GenAlg, ABC):
-    def __init__(self, isLeftPlayer, frameskip):
-        super(HardcodedOpponent, self).__init__(frameskip=frameskip, isLeftPlayer=isLeftPlayer, obsIsImage=False)
+    def __init__(self, isLeftPlayer, frameskip,model):
+        super(HardcodedOpponent, self).__init__(frameskip=frameskip, isLeftPlayer=isLeftPlayer)
+        self.model = model
 
     def get_action(self, obs, timestep, train_mode=True):
         if obs is None:

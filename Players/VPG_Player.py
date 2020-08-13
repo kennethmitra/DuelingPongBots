@@ -88,7 +88,7 @@ class VPG_Player(GenAlg):
         """
         Compute action distribution and value from an observation
         :param obs: observation with len obs_cnt
-        :return: Action distrition (Categorical) and value (tensor)
+        :return: Action distribution (Categorical) and value (tensor)
         """
         if isinstance(obs, np.ndarray):
             obs = torch.from_numpy(obs).float()

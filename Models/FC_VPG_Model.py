@@ -1,10 +1,10 @@
 import torch
 import numpy as np
 
-class FC_VPG_MODEL(torch.nn.Module):
-    def __init__(self, output_dim, side_length):
+class FC_VPG_Model(torch.nn.Module):
+    def __init__(self, output_dim):
         # Shared conv layers for feature extraction
-        super(FC_VPG_MODEL, self).__init__()
+        super(FC_VPG_Model, self).__init__()
 
         # Note input type for Train.py
         self.obsIsImage = False
@@ -16,7 +16,7 @@ class FC_VPG_MODEL(torch.nn.Module):
         torch.nn.init.xavier_uniform_(self.actor_layer2.weight)
 
         # Critic Specific
-        self.critic_layer1 = torch.nn.Linear(self.fc_size, 32)
+        self.critic_layer1 = torch.nn.Linear(6, 32)
         self.critic_layer2 = torch.nn.Linear(32, 1)
         torch.nn.init.xavier_uniform_(self.critic_layer1.weight)
         torch.nn.init.xavier_uniform_(self.critic_layer2.weight)

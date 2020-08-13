@@ -1,11 +1,12 @@
 from Players.HardcodedOpponent import HardcodedOpponent
-from Players.VPG_Player import VPG
+from Players.VPG_Player import VPG_Player
 from PongEnv import PongEnv
-from PIL import  Image
+from PIL import Image
 import numpy as np
 import time
 from utils.GIF_Recorder import GIF_Recorder
-
+from Models.FC_VPG_Model import FC_VPG_Model
+from Models.Dummy_Model import DummyModel
 def train(env, LeftPlayer, RightPlayer, framerate=-1, epochs=10, episodes_per_epoch=3, L_start_epoch=0, R_start_epoch=0):
     """
     Takes in two players. Feeds players observations and gets actions from player after player.frameskip frames
@@ -72,6 +73,8 @@ def train(env, LeftPlayer, RightPlayer, framerate=-1, epochs=10, episodes_per_ep
 
                 else:
                     L_obs = obs[1]
+                    L_obs = np.asarray([L_obs[k] for k in L_obs.keys()])
+                    L_obs = L_obs.flatten()
 
                 # Get new action
                 L_action = LeftPlayer.get_action(L_obs, timestep=L_timestep, train_mode=True) # get_action stores obs, logprobs, and any other intermediary stuff
@@ -142,11 +145,11 @@ if __name__ == '__main__':
     env = PongEnv(framerate=FRAME_RATE)
 
     # Create Left Player
-    LeftPlayer = VPG(env=env, run_name="ActorCritic_vs_Hardcoded_FS1_EPE10", frameskip=1, isLeftPlayer=True)
+    LeftPlayer = VPG_Player(env=env, run_name="ActorCritic_vs_Hardcoded_FS1_EPE10", frameskip=1, isLeftPlayer=True,model = FC_VPG_Model(env.action_space[0].n))
     # L_start_epoch = LeftPlayer.load('./saves/ActorCritic_vs_Hardcoded_FS1_EPE10-3/epo1200.save', load_optim=True)
 
     # Create Right Player
-    RightPlayer = HardcodedOpponent(isLeftPlayer=False, frameskip=1)
+    RightPlayer = HardcodedOpponent(isLeftPlayer=False, frameskip=1, model=DummyModel())
     R_start_epoch = 0
 
-    train(env=env, LeftPlayer=LeftPlayer, RightPlayer=RightPlayer, framerate=FRAME_RATE, epochs=100000, episodes_per_epoch=10, L_start_epoch=L_start_epoch, R_start_epoch=R_start_epoch)
+    train(env=env, LeftPlayer=LeftPlayer, RightPlayer=RightPlayer, framerate=FRAME_RATE, epochs=100000, episodes_per_epoch=10, R_start_epoch=R_start_epoch)

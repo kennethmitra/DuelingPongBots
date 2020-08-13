@@ -273,14 +273,14 @@ class Game:
         if(self.Ball.rect.right > self.RightPlayer.rect.right): # Left player wins
             self.RightPlayer.score -= 1
             self.LeftPlayer.score += 1
-            self.RightPlayer.timestep_reward = -1
+            self.RightPlayer.timestep_reward = 0 #-1
             self.LeftPlayer.timestep_reward = 1
             done = True
             print("Left Player wins!")
         if(self.Ball.rect.left < self.LeftPlayer.rect.left) : # Right player wins
             self.LeftPlayer.score -= 1
             self.RightPlayer.score += 1
-            self.LeftPlayer.timestep_reward = -1
+            self.LeftPlayer.timestep_reward = 0 #-1
             self.RightPlayer.timestep_reward = 1
             print("Right Player wins!")
             done = True
