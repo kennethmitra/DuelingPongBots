@@ -11,7 +11,7 @@ import time
 from Players.GenAlg import GenAlg
 
 
-class VPG_Player(GenAlg):
+class ActorCritic_Player(GenAlg):
     def __init__(self, env, run_name, frameskip, isLeftPlayer, model):
         """
         Construct neural network(s) for actor and critic
@@ -19,7 +19,7 @@ class VPG_Player(GenAlg):
         :param action_cnt: Number of possible actions
         """
 
-        super(VPG_Player, self).__init__(frameskip, isLeftPlayer)
+        super(ActorCritic_Player, self).__init__(frameskip, isLeftPlayer)
         output_dim = env.action_space[0].n
 
         # Hyperparameters --------------------------
@@ -38,7 +38,7 @@ class VPG_Player(GenAlg):
         self.NOTES = "Episodes per epoch is now 10"
         # -----------------------------------------
 
-        self.episode_rewards = []
+        self.episode_rewards = [] # Rewards for each timestep in current episode
 
         self.model = model
 
@@ -212,6 +212,7 @@ class VPG_Player(GenAlg):
         # Compute info for logging
         avg_ep_len = torch.tensor(data['per_episode_length'], requires_grad=False, dtype=torch.float).mean().item()
         avg_ep_raw_rew = torch.tensor(data['per_episode_rews'], requires_grad=False, dtype=torch.float).mean().item()
+        avg_ep_disc_rew = torch.tensor(data['per_episode_disc_rews'], requires_grad=False, dtype=torch.float).mean().item()
         raw_rews = torch.tensor(data['rew'], requires_grad=False, dtype=torch.float)
         epoch_timesteps = data['tstep'][-1]
         num_episodes = len(data['per_episode_length'])
@@ -222,7 +223,8 @@ class VPG_Player(GenAlg):
                           total_loss=total_loss, avg_ep_len=avg_ep_len, avg_ep_raw_rew=avg_ep_raw_rew,
                           epoch_timesteps=epoch_timesteps, num_episodes=num_episodes, advantages=advantages,
                           pred_values=data['val'], disc_rews=returns, raw_rew=raw_rews,
-                          update_time=(time.perf_counter() - update_start_time))
+                          update_time=(time.perf_counter() - update_start_time),
+                          avg_ep_disc_rew=avg_ep_disc_rew)
         # Log
         self.log.log_epoch(epoch, epoch_info)
 
@@ -233,6 +235,7 @@ class VPG_Player(GenAlg):
         del epoch_info
         del avg_ep_len
         del avg_ep_raw_rew
+        del avg_ep_disc_rew
         del raw_rews
         del epoch_timesteps
         del num_episodes

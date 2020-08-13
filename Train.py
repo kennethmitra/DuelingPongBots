@@ -1,5 +1,5 @@
 from Players.HardcodedOpponent import HardcodedOpponent
-from Players.VPG_Player import VPG_Player
+from Players.ActorCritic_Player import ActorCritic_Player
 from PongEnv import PongEnv
 from PIL import Image
 import numpy as np
@@ -138,11 +138,11 @@ if __name__ == '__main__':
     env = PongEnv(framerate=FRAME_RATE)
 
     # Create Left Player
-    LeftPlayer = VPG_Player(env=env, run_name="ActorCritic_vs_Hardcoded_FS1_EPE10", frameskip=1, isLeftPlayer=True,model = FC_VPG_Model(env.action_space[0].n))
+    LeftPlayer = ActorCritic_Player(env=env, run_name="ActorCritic_vs_Hardcoded_Simple_FS1_EPE50", frameskip=1, isLeftPlayer=True, model=FC_VPG_Model(8, env.action_space[0].n))
     # L_start_epoch = LeftPlayer.load('./saves/ActorCritic_vs_Hardcoded_FS1_EPE10-3/epo1200.save', load_optim=True)
 
     # Create Right Player
     RightPlayer = HardcodedOpponent(isLeftPlayer=False, frameskip=1, model=DummyModel())
     R_start_epoch = 0
 
-    train(env=env, LeftPlayer=LeftPlayer, RightPlayer=RightPlayer, framerate=FRAME_RATE, epochs=100000, episodes_per_epoch=10, R_start_epoch=R_start_epoch)
+    train(env=env, LeftPlayer=LeftPlayer, RightPlayer=RightPlayer, framerate=FRAME_RATE, epochs=100000, episodes_per_epoch=50, R_start_epoch=R_start_epoch)

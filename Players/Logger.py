@@ -57,6 +57,7 @@ class Logger:
         self.writer.add_histogram("Train/Raw_Rewards", epoch_info['raw_rew'], epoch_no)
 
 
+
         self.writer.add_scalar("Metrics/Episode_Length", epoch_info['avg_ep_len'], epoch_no)
         self.writer.add_scalar("Metrics/Actual_Timesteps_per_Epoch", epoch_info['epoch_timesteps'], epoch_no)
         self.writer.add_scalar("Metrics/Episodes_per_Epoch", epoch_info['num_episodes'], epoch_no)
@@ -64,6 +65,7 @@ class Logger:
         self.writer.add_scalar('Time/Time_per_Epoch', elapsed_time, epoch_no)
         self.writer.add_scalar('Time/Update_Time', epoch_info['update_time'], epoch_no)
         self.writer.add_scalar('Metrics/Avg_Raw_Reward', epoch_info['avg_ep_raw_rew'], epoch_no)
+        self.writer.add_scalar('Metrics/Avg_Disc_Reward', epoch_info['avg_ep_disc_rew'], epoch_no)
         self.last_episode_time = time.perf_counter()
 
-        print(f"Epoch: {epoch_no}, Entropy: {epoch_info['entropy_avg']}, Reward: {epoch_info['avg_ep_raw_rew']}, Time: {elapsed_time}")
+        print(f"Epoch: {epoch_no}, Entropy: {epoch_info['entropy_avg']}, Raw Rew: {epoch_info['avg_ep_raw_rew']}, Disc Rew: {epoch_info['avg_ep_disc_rew']}, Time: {elapsed_time}")

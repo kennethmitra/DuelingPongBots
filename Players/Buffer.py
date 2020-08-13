@@ -15,6 +15,7 @@ class Buffer:
 
         # One entry per episode
         self.per_episode_rews = []
+        self.per_episode_disc_rews = []
         self.per_episode_length = []
 
     def record(self, timestep=None, obs=None, act=None, logp=None, val=None, rew=None, entropy=None):
@@ -31,6 +32,7 @@ class Buffer:
 
         self.per_episode_rews.append(torch.tensor(episode_rews, requires_grad=False).sum().item())
         self.disc_rtg_rews.extend(episode_disc_rtg_rews)
+        self.per_episode_disc_rews.append(torch.tensor(episode_disc_rtg_rews, requires_grad=False).sum().item())
         self.per_episode_length.append(len(self.tstep))
 
         # When ending an episode, make sure all lists have same length
@@ -41,7 +43,7 @@ class Buffer:
     def get(self):
         data = dict(tstep=self.tstep, obs=self.obs, act=self.act, logp=self.logp, val=self.val, rew=self.rew,
                     entropy=self.entropy, disc_rtg_rews=self.disc_rtg_rews, per_episode_rews=self.per_episode_rews,
-                    per_episode_length=self.per_episode_length)
+                    per_episode_length=self.per_episode_length, per_episode_disc_rews=self.per_episode_disc_rews)
         return data
 
     def clear(self):
@@ -65,6 +67,8 @@ class Buffer:
         self.per_episode_rews.clear()
         del self.per_episode_length[:]
         self.per_episode_length.clear()
+        del self.per_episode_disc_rews[:]
+        self.per_episode_disc_rews.clear()
 
 
 # Buffer Unit Tests
