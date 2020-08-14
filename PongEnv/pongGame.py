@@ -247,7 +247,7 @@ class Game:
             ball_vel_y_modifier = (ball_center_y - paddle_center_y) / (float(player.height) / 2.0)
             self.Ball.velocityY = (-1.0 if self.Ball.velocityY < 0 else 1.0) * \
                                   0.5 * math.sqrt(self.Ball.velocityY**2 + self.Ball.velocityX**2) * \
-                                  (1 + 0.8*ball_vel_y_modifier) + player.velocityY
+                                  (1 + 0.8*ball_vel_y_modifier) + player.velocityY*0.5
             self.Ball.velocityY = min(self.Ball.velocityY, self.Ball.MAX_INITIAL_VEL*1.5)
 
 

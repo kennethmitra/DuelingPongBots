@@ -1,10 +1,11 @@
 from Players.HardcodedOpponent import HardcodedOpponent
 from Players.ActorCritic_Player import ActorCritic_Player
 from Players.VPG_Player import VPG_Player
-from PongEnv import PongEnv
+from PongEnv.PongEnv import PongEnv
 from PIL import Image
 import numpy as np
 import time
+from Players.GenAlg import GenAlg
 from utils.GIF_Recorder import GIF_Recorder
 from Models.Gen_FC import Gen_FC
 from Models.Dummy_Model import DummyModel
