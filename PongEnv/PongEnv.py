@@ -15,14 +15,14 @@ AGENT_ACT_SPACE = 3
 
 
 class PongEnv(gym.Env):
-    def __init__(self, framerate):
+    def __init__(self, framerate,player_speeds=(10.0, 10.0)):
         super(PongEnv, self).__init__()
 
         # Initialize pygame
         pygame.init()
 
         # Create game window
-        self.game = Game(CANVAS_WIDTH, CANVAS_HEIGHT, framerate=framerate)
+        self.game = Game(CANVAS_WIDTH, CANVAS_HEIGHT, framerate=framerate, player_speeds=player_speeds)
 
         self.board_state = None  # Will get set when render() is called
 

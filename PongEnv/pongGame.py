@@ -162,7 +162,7 @@ class Ball(EnhancedSprite):
 
 class Game:
 
-    def __init__(self, CANVAS_WIDTH, CANVAS_HEIGHT, framerate, player_speeds=(5.0, 5.0), ball_max_initial_speed=5.0):
+    def __init__(self, CANVAS_WIDTH, CANVAS_HEIGHT, framerate, player_speeds, ball_max_initial_speed=5.0):
         """
         Initialize a Game object
         :param CANVAS_WIDTH: Width in pixels of game window (int)
@@ -280,14 +280,14 @@ class Game:
         if(self.Ball.rect.right > self.RightPlayer.rect.right): # Left player wins
             self.RightPlayer.score -= 1
             self.LeftPlayer.score += 1
-            self.RightPlayer.timestep_reward = 0 #-1
+            self.RightPlayer.timestep_reward = -1
             self.LeftPlayer.timestep_reward = 1
             done = True
             print("Left Player wins!")
         if(self.Ball.rect.left < self.LeftPlayer.rect.left) : # Right player wins
             self.LeftPlayer.score -= 1
             self.RightPlayer.score += 1
-            self.LeftPlayer.timestep_reward = 0 #-1
+            self.LeftPlayer.timestep_reward = -1
             self.RightPlayer.timestep_reward = 1
             print("Right Player wins!")
             done = True
