@@ -254,6 +254,9 @@ class Game:
             self.Ball.velocityX += self.Ball.velocityX * random.uniform(-0.1, 0.1) / 15.0
             self.Ball.velocityY += self.Ball.velocityY * random.uniform(-0.1, 0.1) / 15.0
 
+            # Give the player that hit the ball a small reward
+            player.timestep_reward += 0.5
+
         # Enforce Speed minimum
         self.Ball.velocityX = max(abs(self.Ball.velocityX), self.BALL_MIN_X_SPEED) * (
             -1.0 if self.Ball.velocityX < 0 else 1.0)
@@ -280,15 +283,15 @@ class Game:
         if(self.Ball.rect.right > self.RightPlayer.rect.right): # Left player wins
             self.RightPlayer.score -= 1
             self.LeftPlayer.score += 1
-            self.RightPlayer.timestep_reward = -1
-            self.LeftPlayer.timestep_reward = 1
+            self.RightPlayer.timestep_reward += -1
+            self.LeftPlayer.timestep_reward += 1
             done = True
             print("Left Player wins!")
         if(self.Ball.rect.left < self.LeftPlayer.rect.left) : # Right player wins
             self.LeftPlayer.score -= 1
             self.RightPlayer.score += 1
-            self.LeftPlayer.timestep_reward = -1
-            self.RightPlayer.timestep_reward = 1
+            self.LeftPlayer.timestep_reward += -1
+            self.RightPlayer.timestep_reward += 1
             print("Right Player wins!")
             done = True
 

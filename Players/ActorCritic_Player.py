@@ -25,8 +25,8 @@ class ActorCritic_Player(GenAlg):
         # Hyperparameters --------------------------
         self.ENVIRONMENT = 'Pong-v0'
         self.SEED = 543
-        self.LEARNING_RATE = 0.0011
-        self.DISCOUNT_FACTOR = 0.997
+        self.LEARNING_RATE = 1e-4
+        self.DISCOUNT_FACTOR = 0.93
         self.ENTROPY_COEFF = 0.0
         self.TIMESTEPS_PER_EPOCH = 10000
         self.ACTIVATION_FUNC = torch.relu
