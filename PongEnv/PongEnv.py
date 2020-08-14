@@ -7,7 +7,7 @@ import sys
 from PIL import Image
 import matplotlib.pyplot as plt
 
-from pongGame import *
+from .pongGame import Game
 
 CANVAS_WIDTH = 256
 CANVAS_HEIGHT = 256

@@ -1,7 +1,7 @@
-from GenAlg import GenAlg
+from .GenAlg import GenAlg
 import torch
-from Logger import Logger
-from Buffer import Buffer
+from .Logger import Logger
+from .Buffer import Buffer
 from torch.distributions import Categorical
 from itertools import count
 from pathlib import Path
