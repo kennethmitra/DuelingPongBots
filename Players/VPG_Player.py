@@ -6,12 +6,15 @@ from torch.distributions import Categorical
 from itertools import count
 from pathlib import Path
 import time
+import os
+import numpy as np
+
 
 class VPG_Player(GenAlg):
     """
     A Simple Vanilla Policy Gradient Algorithm for debugging purposes
     """
-    
+
     def __init__(self, env, run_name, frameskip, isLeftPlayer, model):
         super(VPG_Player, self).__init__(frameskip=frameskip, isLeftPlayer=isLeftPlayer)
 
@@ -90,9 +93,11 @@ class VPG_Player(GenAlg):
 
     def predict(self, obs):
 
+        if isinstance(obs, np.ndarray):
+            obs = torch.from_numpy(obs).float()
         obs = obs.to(self.model.device)
 
-        actionLogits = self.model.forward(obs)
+        actionLogits, _ = self.model.forward(obs)
 
         action_dist = Categorical(logits=actionLogits)
         return action_dist
@@ -153,7 +158,6 @@ class VPG_Player(GenAlg):
         if normalize_returns:
             returns = (returns) / returns.std()
 
-
         # Zero out gradients before calculating loss
         self.optimizer.zero_grad()
 
@@ -183,12 +187,10 @@ class VPG_Player(GenAlg):
         num_episodes = len(data['per_episode_length'])
 
         # Package logging info
-        epoch_info = dict(actor_loss=actor_loss, entropy_loss=entropy_loss,
-                          entropy_avg=entropy_avg,
+        epoch_info = dict(actor_loss=actor_loss, entropy_loss=entropy_loss, entropy_avg=entropy_avg,
                           total_loss=total_loss, avg_ep_len=avg_ep_len, avg_ep_raw_rew=avg_ep_raw_rew,
-                          epoch_timesteps=epoch_timesteps, num_episodes=num_episodes,
-                          pred_values=data['val'], disc_rews=returns, raw_rew=raw_rews,
-                          update_time=(time.perf_counter() - update_start_time),
+                          epoch_timesteps=epoch_timesteps, num_episodes=num_episodes, disc_rews=returns,
+                          raw_rew=raw_rews, update_time=(time.perf_counter() - update_start_time),
                           avg_ep_disc_rew=avg_ep_disc_rew)
         # Log
         self.log.log_epoch(epoch, epoch_info)

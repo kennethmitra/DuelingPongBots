@@ -36,8 +36,8 @@ class Buffer:
         self.per_episode_length.append(len(self.tstep))
 
         # When ending an episode, make sure all lists have same length
-        assert len(self.tstep) == len(self.obs) == len(self.act) == len(self.logp) == len(self.val) == len(self.rew) == len(self.entropy) == len(self.disc_rtg_rews)
-        assert len(self.per_episode_length) == len(self.per_episode_rews)
+        #assert len(self.tstep) == len(self.obs) == len(self.act) == len(self.logp) == len(self.val) == len(self.rew) == len(self.entropy) == len(self.disc_rtg_rews)
+        #assert len(self.per_episode_length) == len(self.per_episode_rews)
 
         
     def get(self):
