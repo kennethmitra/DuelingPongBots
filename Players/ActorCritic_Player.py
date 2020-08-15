@@ -12,7 +12,7 @@ from Players.GenAlg import GenAlg
 
 
 class ActorCritic_Player(GenAlg):
-    def __init__(self, env, run_name, frameskip, isLeftPlayer, model):
+    def __init__(self, env, run_name, frameskip, isLeftPlayer, model, train_mode=True):
         """
         Construct neural network(s) for actor and critic
         :param obs_cnt: Number of components in an observation
@@ -25,13 +25,13 @@ class ActorCritic_Player(GenAlg):
         # Hyperparameters --------------------------
         self.ENVIRONMENT = 'Pong-v0'
         self.SEED = 543
-        self.LEARNING_RATE = 1e-4
+        self.LEARNING_RATE = 6e-4
         self.DISCOUNT_FACTOR = 0.93
         self.ENTROPY_COEFF = 0.0
         self.TIMESTEPS_PER_EPOCH = 10000
         self.ACTIVATION_FUNC = torch.relu
         self.NORMALIZE_RETURNS = False
-        self.NORMALIZE_ADVANTAGES = True
+        self.NORMALIZE_ADVANTAGES = False
         self.CLIP_GRAD = False
         self.NUM_PROCESSES = 1
         self.RUN_NAME = run_name
@@ -53,21 +53,9 @@ class ActorCritic_Player(GenAlg):
 
         self.model.to(self.model.device)
 
-        self.log = Logger(run_name=None, refresh_secs=30)
+
         self.optimizer = torch.optim.Adam(params=self.model.parameters(), lr=self.LEARNING_RATE)
 
-        self.log.log_hparams(ENVIRONMENT=self.ENVIRONMENT,
-                             SEED=self.SEED,
-                             model=self.model,
-                             optimizer=self.optimizer,
-                             LEARNING_RATE=self.LEARNING_RATE,
-                             DISCOUNT_FACTOR=self.DISCOUNT_FACTOR,
-                             ENTROPY_COEFF=self.ENTROPY_COEFF,
-                             activation_func=self.ACTIVATION_FUNC,
-                             tsteps_per_epoch=self.TIMESTEPS_PER_EPOCH,
-                             normalize_returns=self.NORMALIZE_RETURNS,
-                             normalize_advantages=self.NORMALIZE_ADVANTAGES,
-                             clip_grad=self.CLIP_GRAD, notes=self.NOTES, display=True)
 
         self.buf = Buffer()
 
@@ -75,13 +63,36 @@ class ActorCritic_Player(GenAlg):
         if run_name is None:
             run_name = Path(__file__).stem
 
-        # Ex) If run_name is "dog", and dog-1, dog-2 are taken, save at dog-3
-        for i in count():
-            if not os.path.exists(f'./saves/{run_name}-{i}'):
-                run_name = f'{run_name}-{i}'
-                break
-        Path(f'./saves/{run_name}').mkdir(parents=True, exist_ok=True)
-        self.save_path = f'./saves/{run_name}'
+        if train_mode:
+            # Ex) If run_name is "dog", and dog-1, dog-2 are taken, save at dog-3
+            for i in count():
+                if not os.path.exists(f'./saves/{run_name}-{i}'):
+                    run_name = f'{run_name}-{i}'
+                    break
+            Path(f'./saves/{run_name}').mkdir(parents=True, exist_ok=True)
+            self.save_path = f'./saves/{run_name}'
+
+            # Choose Tensorboard directory
+            for i in count():
+                if not os.path.exists(f'./runs/{run_name}-{i}'):
+                    run_name = f'{run_name}-{i}'
+                    break
+            Path(f'./runs/{run_name}').mkdir(parents=True, exist_ok=True)
+            self.log_dir = f'./runs/{run_name}'
+
+            self.log = Logger(log_dir=self.log_dir, refresh_secs=30)
+            self.log.log_hparams(ENVIRONMENT=self.ENVIRONMENT,
+                                 SEED=self.SEED,
+                                 model=self.model,
+                                 optimizer=self.optimizer,
+                                 LEARNING_RATE=self.LEARNING_RATE,
+                                 DISCOUNT_FACTOR=self.DISCOUNT_FACTOR,
+                                 ENTROPY_COEFF=self.ENTROPY_COEFF,
+                                 activation_func=self.ACTIVATION_FUNC,
+                                 tsteps_per_epoch=self.TIMESTEPS_PER_EPOCH,
+                                 normalize_returns=self.NORMALIZE_RETURNS,
+                                 normalize_advantages=self.NORMALIZE_ADVANTAGES,
+                                 clip_grad=self.CLIP_GRAD, notes=self.NOTES, display=True)
 
         print("Num params:", sum(p.numel() for p in self.model.parameters()))
     def predict(self, obs):

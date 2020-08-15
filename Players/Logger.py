@@ -4,9 +4,8 @@ import time
 import numpy as np
 
 class Logger:
-    def __init__(self, run_name=None, refresh_secs=30):
-        log_loc = f"runs/{run_name}" if run_name is not None else None
-        self.writer = SummaryWriter(log_dir=log_loc, flush_secs=refresh_secs)
+    def __init__(self, log_dir=None, refresh_secs=30):
+        self.writer = SummaryWriter(log_dir=log_dir, flush_secs=refresh_secs)
         self.last_episode_time = time.perf_counter()
         self.loggedModel=False
 

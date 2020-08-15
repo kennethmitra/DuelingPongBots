@@ -142,13 +142,14 @@ if __name__ == '__main__':
 
     # Create Left Player
     #LeftPlayer = ActorCritic_Player(env=env, run_name="ActorCritic_vs_Hardcoded_Simple_FS1_EPE50", frameskip=1, isLeftPlayer=True, model=Gen_FC(8, env.action_space[0].n))
+    experiment_name = "AC_vs_VPG"
 
-    LeftPlayer = VPG_Player(env=env, run_name="VPG", frameskip=1, isLeftPlayer=True, model=Gen_FC(input_dim=8, output_dim=env.action_space[0].n, isValNet=False))
+    LeftPlayer = VPG_Player(env=env, run_name=f"{experiment_name}-VPG", frameskip=1, isLeftPlayer=True, model=Gen_FC(input_dim=8, output_dim=env.action_space[0].n, isValNet=False))
     L_start_epoch = LeftPlayer.load('./saves/VPG-11/epo100.save', load_optim=True)
 
     # Create Right Player
     # RightPlayer = HardcodedOpponent(isLeftPlayer=False, frameskip=1, model=DummyModel())
-    RightPlayer = ActorCritic_Player(env=env, run_name="ActorCritic_vs_Hardcoded_Simple_FS1_EPE50", frameskip=1,
+    RightPlayer = ActorCritic_Player(env=env, run_name=f"{experiment_name}-AC", frameskip=1,
                                      isLeftPlayer=True, model=Gen_FC(8, env.action_space[0].n, isValNet=True))
     R_start_epoch = RightPlayer.load('./saves/ActorCritic_vs_Hardcoded_Simple_FS1_EPE50-1/epo100.save', load_optim=True)
 
