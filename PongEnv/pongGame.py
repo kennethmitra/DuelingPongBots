@@ -197,7 +197,7 @@ class Game:
         self.allSprites.add(self.Ball)
 
         # Set min speed
-        self.BALL_MIN_X_SPEED = self.Ball.MAX_INITIAL_VEL / 3.0
+        self.BALL_MIN_X_SPEED = self.Ball.MAX_INITIAL_VEL / 5.0
         self.BALL_MIN_Y_SPEED = self.Ball.MAX_INITIAL_VEL / 5.0
 
         # Set max speed
@@ -255,7 +255,7 @@ class Game:
             self.Ball.velocityY += self.Ball.velocityY * random.uniform(-0.1, 0.1) / 15.0
 
             # Give the player that hit the ball a small reward
-            player.timestep_reward += 0.5
+            # player.timestep_reward += 0.5
 
         # Enforce Speed minimum
         self.Ball.velocityX = max(abs(self.Ball.velocityX), self.BALL_MIN_X_SPEED) * (

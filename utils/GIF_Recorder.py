@@ -10,5 +10,5 @@ class GIF_Recorder:
         self.images.append(image)
 
     def make_gif(self, epoch):
-        imageio.mimsave(f"{self.save_dir}/{epoch}.gif", self.images)
+        imageio.mimsave(f"{self.save_dir}/{epoch}.gif", self.images, fps=60)
         self.images = []
