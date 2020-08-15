@@ -24,15 +24,12 @@ class VPG_Player(GenAlg):
         # Hyperparameters --------------------------
         self.ENVIRONMENT = 'Pong'
         self.SEED = 543
-        self.LEARNING_RATE = 1e-4
+        self.LEARNING_RATE = 6e-4
         self.DISCOUNT_FACTOR = 0.93
         self.ENTROPY_COEFF = 0.0
-        self.TIMESTEPS_PER_EPOCH = 10000
         self.ACTIVATION_FUNC = torch.relu
         self.NORMALIZE_RETURNS = False
-        self.NORMALIZE_ADVANTAGES = False
         self.CLIP_GRAD = False
-        self.NUM_PROCESSES = 1
         self.RUN_NAME = run_name
         self.NOTES = "Vanilla Policy Gradient"
         # -----------------------------------------
@@ -61,7 +58,6 @@ class VPG_Player(GenAlg):
                              DISCOUNT_FACTOR=self.DISCOUNT_FACTOR,
                              ENTROPY_COEFF=self.ENTROPY_COEFF,
                              activation_func=self.ACTIVATION_FUNC,
-                             tsteps_per_epoch=self.TIMESTEPS_PER_EPOCH,
                              normalize_returns=self.NORMALIZE_RETURNS,
                              clip_grad=self.CLIP_GRAD, notes=self.NOTES, display=True)
 
