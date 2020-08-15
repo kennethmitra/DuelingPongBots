@@ -27,7 +27,7 @@ When the reward for hitting the ball is removed, the agents learn to score again
 *150 epochs after removing reward for touching the ball*
 
 
-The agents now play a zero sum game as seen in the rewards graph:
+The agents now play a zero sum game as seen in the rewards graph | VPG(Gray), ActorCritic(Orange):
 ![VPG vs A2C no reward for hitting the ball training graph](VPG_vs_A2C-150epochs-after-rally-reward-tensorboard.png)
 
 
