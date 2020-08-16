@@ -10,13 +10,13 @@ import os
 import numpy as np
 
 
-class VPG_Player(GenAlg):
+class ES_Player(GenAlg):
     """
-    A Simple Vanilla Policy Gradient Algorithm for debugging purposes
+    Evolutionary algorithm with advantage weighted update steps
     """
 
-    def __init__(self, env, run_name, frameskip, isLeftPlayer, model, train_mode=True):
-        super(VPG_Player, self).__init__(frameskip=frameskip, isLeftPlayer=isLeftPlayer)
+    def __init__(self, env, run_name, frameskip, isLeftPlayer, model, train_mode=True, episodes_per_epoch=0):
+        super(ES_Player, self).__init__(frameskip=frameskip, isLeftPlayer=isLeftPlayer)
 
         # Takes in a simple neural network that only predicts actions
         self.model = model
@@ -26,21 +26,26 @@ class VPG_Player(GenAlg):
         self.SEED = 543
         self.LEARNING_RATE = 6e-4
         self.ACTIVATION_FUNC = torch.relu
-        self.NORMALIZE_RETURNS = False
-        self.npop = 50  # population size
+        self.NORMALIZE_RETURNS = episodes_per_epoch
+        self.npop = episodes_per_epoch  # should be equal to episodes per epoch (basically the number of slices of the noise array)
         self.sigma = 0.1  # noise standard deviation
-        self.alpha = 0.001  # learning rate        self.RUN_NAME = run_name
+        self.RUN_NAME = run_name
         self.NOTES = "Vanilla Policy Gradient"
         # -----------------------------------------
 
         self.episode_rewards = []  # Rewards for each timestep in current episode
-        self.noise_matrix = torch.randn((self.npop, [torch.size(self.model.weight)]))
+        # Temp variable to denote inital weight guess and keep track of it throughout
+        self.guess = torch.randn_like(model.weight)
+        self.noise_matrix = torch.randn([self.npop] + list(self.model.weight.shape))
+        # Create global counter to iterate through slices of noise_matrix
         self.ctr = 0
+        # Add noise to prepare for first pass
+        self.model.weight = self.guess + self.sigma * self.noise_matrix[self.ctr]
 
         print("-------------------------------GPU INFO--------------------------------------------")
         print('Available devices ', torch.cuda.device_count())
-        self.model.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        # self.model.device = "cpu"
+        # self.model.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.model.device = "cpu"
         print('Current cuda device ', self.model.device)
         if self.model.device != "cpu":
             print('Current CUDA device name ', torch.cuda.get_device_name(self.model.device))
@@ -78,33 +83,24 @@ class VPG_Player(GenAlg):
                                  SEED=self.SEED,
                                  model=self.model,
                                  LEARNING_RATE=self.LEARNING_RATE,
-                                 DISCOUNT_FACTOR=self.DISCOUNT_FACTOR,
                                  activation_func=self.ACTIVATION_FUNC,
                                  normalize_returns=self.NORMALIZE_RETURNS,
                                  notes=self.NOTES, display=True)
 
     def get_action(self, obs, timestep, train_mode=True):
-        action_dist = self.predict(obs)
-        action = action_dist.sample()
-        entropy = action_dist.entropy()
+        if isinstance(obs, np.ndarray):
+            obs = torch.from_numpy(obs).float()
+
+        obs = obs.to(self.model.device)
+        actionLogits, _ = self.model.forward(obs)
+        action = torch.argmax(torch.as_tensor(actionLogits))
 
         if train_mode:  # Buffer is only used in training
             # Set val to placeholder value since it isn't used
-            self.buf.record(timestep=timestep, obs=obs, act=action, logp=action_dist.log_prob(action), val=None,
-                            entropy=entropy)
+            self.buf.record(timestep=timestep, obs=obs, act=action, logp=None, val=None,
+                            entropy=None)
 
         return action.item()
-
-    def predict(self, obs):
-
-        if isinstance(obs, np.ndarray):
-            obs = torch.from_numpy(obs).float()
-        obs = obs.to(self.model.device)
-
-        actionLogits, _ = self.model.forward(obs)
-
-        action_dist = Categorical(logits=actionLogits)
-        return action_dist
 
     def load(self, path, load_optim=False):
         checkpoint = torch.load(path)
@@ -123,17 +119,18 @@ class VPG_Player(GenAlg):
         self.episode_rewards.append(reward)
         self.buf.record(rew=reward)
 
-        self.model.weight = self.model.weight + self.noise_matrix[self.ctr]
-
         # Handle end of episode
         if end_episode:
             # Calculate discounted rewards to go
-            ep_disc_rtg = max(self.episode_rewards)
-            self.ctr+=1
+            ep_disc_rtg = [float(e) for e in self.episode_rewards]
+            # increment global counter
+            self.ctr += 1
+            if self.ctr < self.npop:
+                # if end of episode, update weights with sigma-scaled noise matrix unless end of episode
+                self.model.weight = self.guess + self.sigma * self.noise_matrix[self.ctr]
             # End episode in buffer
             self.buf.store_episode_stats(episode_rews=self.episode_rewards, episode_disc_rtg_rews=ep_disc_rtg)
             self.episode_rewards.clear()
-
 
     def train_batch(self, epoch):
         print("Training epoch", epoch)
@@ -143,16 +140,26 @@ class VPG_Player(GenAlg):
         update_start_time = time.perf_counter()
 
         # Don't need to backprop through returns
-        returns = torch.tensor(data['per_episode_rews']).to(self.model.device)
+        returns = torch.tensor(data['per_episode_rews']).float().to(self.model.device)
 
         if normalize_returns:
-            returns = (returns) / returns.std()
+            returns = (returns - returns.mean()) / returns.std()
 
-        # Calculate actor and critic loss (Using torch functions - hopefully faster)
-        entropy_avg = torch.stack(data['entropy']).mean()
-        self.model.weight = self.model.weight + self.LEARNING_RATE/(self.npop*self.sigma)\
-                            + torch.dot(torch.transpose(self.noise_matrix), returns)
-        self.noise_matrix = torch.randn((self.npop, [torch.size(self.model.weight)]))
+        # Compute the change in the guess matrix using a return scaled update (somewhat reminiscent of backprop)
+        matmul_product = torch.matmul(torch.transpose(self.noise_matrix, 0, 2), returns)
+        matmul_product = matmul_product.view(list(self.guess.shape))
+        self.guess = self.guess + self.LEARNING_RATE / (self.npop * self.sigma) * matmul_product
+
+
+        # Reset the noise matrix
+        self.noise_matrix = torch.randn([self.npop] + list(self.model.weight.shape))
+
+        # Reset global counter to prepare for next batch
+        self.ctr = 0
+
+        # Update model to new weights/ add noise to prepare for new initial pass
+        self.model.weight = self.guess + self.sigma * self.noise_matrix[self.ctr]
+
 
         # Compute info for logging
         avg_ep_len = torch.tensor(data['per_episode_length'], requires_grad=False, dtype=torch.float).mean().item()
@@ -164,9 +171,9 @@ class VPG_Player(GenAlg):
         num_episodes = len(data['per_episode_length'])
 
         # Package logging info
-        epoch_info = dict( entropy_avg=entropy_avg,
-                           avg_ep_len=avg_ep_len, avg_ep_raw_rew=avg_ep_raw_rew,
-                          epoch_timesteps=epoch_timesteps, num_episodes=num_episodes, disc_rews=returns,
+        epoch_info = dict(entropy_avg=torch.zeros((1)),
+                          avg_ep_len=avg_ep_len, avg_ep_raw_rew=avg_ep_raw_rew,
+                          epoch_timesteps=epoch_timesteps, num_episodes=num_episodes, disc_rews=torch.zeros((1)),
                           raw_rew=raw_rews, update_time=(time.perf_counter() - update_start_time),
                           avg_ep_disc_rew=avg_ep_disc_rew)
         # Log
@@ -183,7 +190,6 @@ class VPG_Player(GenAlg):
         del raw_rews
         del epoch_timesteps
         del num_episodes
-        del entropy_avg
         del returns
         del data
         del normalize_returns

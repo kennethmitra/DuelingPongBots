@@ -8,6 +8,7 @@ import time
 from Players.GenAlg import GenAlg
 from utils.GIF_Recorder import GIF_Recorder
 from Models.Gen_FC import Gen_FC
+from Players.ES_Player import ES_Player
 from Models.Dummy_Model import DummyModel
 def train(env, LeftPlayer, RightPlayer, framerate=-1, epochs=10, episodes_per_epoch=3, L_start_epoch=0, R_start_epoch=0):
     """
@@ -142,15 +143,18 @@ if __name__ == '__main__':
 
     # Create Left Player
     #LeftPlayer = ActorCritic_Player(env=env, run_name="ActorCritic_vs_Hardcoded_Simple_FS1_EPE50", frameskip=1, isLeftPlayer=True, model=Gen_FC(8, env.action_space[0].n))
-    experiment_name = "AC_vs_VPG"
+    experiment_name = "AC_vs_ES"
+    L_start_epoch, R_start_epoch = [0, 0]
 
-    LeftPlayer = VPG_Player(env=env, run_name=f"{experiment_name}-VPG", frameskip=1, isLeftPlayer=True, model=Gen_FC(input_dim=8, output_dim=env.action_space[0].n, isValNet=False))
-    L_start_epoch = LeftPlayer.load('./saves/VPG-11/epo100.save', load_optim=True)
+    LeftPlayer = ActorCritic_Player(env=env, run_name=f"{experiment_name}-AC", frameskip=4,
+                                     isLeftPlayer=True, model=Gen_FC(8, env.action_space[0].n, isValNet=True))
+    # L_start_epoch = LeftPlayer.load('./saves/saves/AC_vs_AC-AC_L-2/epo700.save', load_optim=True)
 
     # Create Right Player
     # RightPlayer = HardcodedOpponent(isLeftPlayer=False, frameskip=1, model=DummyModel())
-    RightPlayer = ActorCritic_Player(env=env, run_name=f"{experiment_name}-AC", frameskip=1,
-                                     isLeftPlayer=True, model=Gen_FC(8, env.action_space[0].n, isValNet=True))
-    R_start_epoch = RightPlayer.load('./saves/ActorCritic_vs_Hardcoded_Simple_FS1_EPE50-1/epo100.save', load_optim=True)
+    RightPlayer = ES_Player(env=env, run_name=f"{experiment_name}-AC", frameskip=1,
+                                     isLeftPlayer=False, model=Gen_FC(8, env.action_space[0].n, isValNet=True, useBias=False),episodes_per_epoch=30)
+    # R_start_epoch = RightPlayer.load('./saves/saves/AC_vs_AC-AC_R-1/epo650.save', load_optim=True)
 
-    train(env=env, LeftPlayer=LeftPlayer, RightPlayer=RightPlayer, framerate=FRAME_RATE, epochs=100000, episodes_per_epoch=25,L_start_epoch=L_start_epoch, R_start_epoch=R_start_epoch)
+    train(env=env, LeftPlayer=LeftPlayer, RightPlayer=RightPlayer, framerate=FRAME_RATE, epochs=100000,
+          episodes_per_epoch=30, L_start_epoch=L_start_epoch, R_start_epoch=R_start_epoch)

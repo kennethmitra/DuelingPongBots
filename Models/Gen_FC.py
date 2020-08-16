@@ -3,18 +3,24 @@ import numpy as np
 
 class Gen_FC(torch.nn.Module):
 
-    def __init__(self, input_dim, output_dim, isValNet):
+    def __init__(self, input_dim, output_dim, isValNet,useBias=True):
 
         # Note input type for Train.py
         super().__init__()
         self.obsIsImage = False
         self.isValNet = isValNet
 
+        self.input_dim = input_dim
+        self.output_dim = output_dim
+        self.useBias =useBias
+
         # Actor Specific
-        self.actor_layer1 = torch.nn.Linear(input_dim, 64)
-        self.actor_layer2 = torch.nn.Linear(64, output_dim)
+        self.actor_layer1 = torch.nn.Linear(input_dim, 64, bias=useBias)
+        self.actor_layer2 = torch.nn.Linear(64, output_dim, bias=useBias)
         torch.nn.init.xavier_uniform_(self.actor_layer1.weight)
         torch.nn.init.xavier_uniform_(self.actor_layer2.weight)
+        self.weight = torch.cat([self.actor_layer1.weight.data.view(input_dim, 64), self.actor_layer2.weight.data], 0)
+
 
         if self.isValNet:
             # Critic Specific
@@ -32,11 +38,9 @@ class Gen_FC(torch.nn.Module):
 
         if isinstance(obs, np.ndarray):
             obs = torch.from_numpy(obs).float()
-
-        # Add batch dimension and channel dimension (256, 256) -> (1, 1, 256, 256) | (n, c, h, w)
-        obs = torch.unsqueeze(obs, 0)
-        obs = torch.unsqueeze(obs, 0)
-
+        if not self.useBias:
+            self.actor_layer1.weight = torch.nn.Parameter(self.weight[0:self.input_dim].view(64, self.input_dim))
+            self.actor_layer2.weight = torch.nn.Parameter(self.weight[self.input_dim:self.input_dim + self.output_dim])
         # Separate Actor and Critic Networks
 
         # Actor Specific
@@ -50,5 +54,6 @@ class Gen_FC(torch.nn.Module):
             critic_intermed = self.critic_layer1(obs)
             critic_intermed = torch.nn.Tanh()(critic_intermed)
             value = self.critic_layer2(critic_intermed)
+        print
 
         return actor_Logits, value
