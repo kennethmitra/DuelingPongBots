@@ -15,7 +15,7 @@ AGENT_ACT_SPACE = 3
 
 
 class PongEnv(gym.Env):
-    def __init__(self, framerate,player_speeds=(10.0, 10.0)):
+    def __init__(self, framerate, player_speeds=(10.0, 10.0)):
         super(PongEnv, self).__init__()
 
         # Initialize pygame

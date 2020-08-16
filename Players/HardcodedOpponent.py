@@ -12,8 +12,8 @@ class HardcodedOpponent(GenAlg, ABC):
         if obs is None:
             return 0
 
-        ballPos = obs['ballCenter']
-        playerPos = obs['leftPlayerCenter'] if self.isLeftPlayer else obs['rightPlayerCenter']
+        ballPos = (obs[0], obs[1])
+        playerPos = (obs[4], obs[5]) if self.isLeftPlayer else (obs[6], obs[7])
 
         if ballPos[1] < playerPos[1]:  # If ball is above paddle go up
             return 1
