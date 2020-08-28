@@ -17,7 +17,8 @@ Player Types: (Players/)
 - ES_Player: Player that learns to play using an Evolutionary Strategies algorithm
 - HumanPlayer: Player that moves paddle according to keyboard input, allowing you to play against a trained policy.
 
-In train.py, any player can easily be swapped out with another one
+Note that in train.py, any player can easily be swapped out with another one
+
 ----------------------------------------------------
 ## Results
 
