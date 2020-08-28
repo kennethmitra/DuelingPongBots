@@ -5,8 +5,19 @@ that allows RL Agent vs RL Agent, Human vs RL Agent, and Human vs Hardcoded AI i
 
 RL Algorithms implemented: Advantage-Actor-Critic (A2C), Vanilla Policy Gradient (VPG)
 
-Model Types: Convolutional networks, Feedforward networks
+Model Types: (Models/)
+- Conv_Model: Convolutional neural network
+- Gen_FC: Simple feedforward neural network
+- DummyModel: Placeholder for players without a brain
 
+Player Types: (Players/)
+- HardcodedOpponent: Pre-programmed player that follows the ball with its paddle
+- VPG_Player: Player that learns to play using the Vanilla Policy Gradient reinforcement learning algorithm
+- ActorCritic_Player: Player that learns to play using the Actor-Critic reinforcement learning algorithm
+- ES_Player: Player that learns to play using an Evolutionary Strategies algorithm
+- HumanPlayer: Player that moves paddle according to keyboard input, allowing you to play against a trained policy.
+
+In train.py, any player can easily be swapped out with another one
 ----------------------------------------------------
 ## Results
 
